@@ -194,10 +194,59 @@ def _extract_docx(file_path):
     }
 
 
-def _split_sentences(full_text, pages, file_type, paragraphs=None):
-    """Split text into sentences while preserving location information."""
+LEGAL_ABBREVIATIONS = (
+    'e.g.', 'i.e.', 'etc.', 'vs.', 'al.', 'ltd.', 'inc.', 'corp.', 'co.',
+    'no.', 'sec.', 'art.', 'para.', 'cl.', 'pvt.', 'u.s.', 'u.k.', 'dept.',
+    'approx.', 'govt.', 'reg.', 'ref.', 'v.', 'jan.', 'feb.', 'mar.', 'apr.',
+    'jun.', 'jul.', 'aug.', 'sep.', 'sept.', 'oct.', 'nov.', 'dec.'
+)
+
+
+def _split_into_sentences_raw(text):
+    """Split text into sentences, protecting legal abbreviations and numbers."""
+    if not text:
+        return []
+    
+    # Protect legal abbreviations by replacing their period with a placeholder
+    protected_text = text
+    placeholder_map = {}
+    for i, abbr in enumerate(LEGAL_ABBREVIATIONS):
+        pattern = re.compile(re.escape(abbr), re.IGNORECASE)
+        for m in pattern.finditer(protected_text):
+            matched_str = m.group(0)
+            token = f"__ABBR_{i}_{len(placeholder_map)}__"
+            placeholder_map[token] = matched_str
+            protected_text = protected_text.replace(matched_str, token)
+    
+    # Protect decimal numbers (e.g., 1.5, 30.00)
+    for m in re.finditer(r'\b\d+\.\d+\b', protected_text):
+        num_str = m.group(0)
+        token = f"__DEC_{len(placeholder_map)}__"
+        placeholder_map[token] = num_str
+        protected_text = protected_text.replace(num_str, token)
+
+    # Standard sentence split on punctuation followed by whitespace and uppercase/quote/bracket
     pattern = r'(?<=[.!?;])\s+(?=[A-Z"\(\[])'
+    parts = re.split(pattern, protected_text)
+    
+    # Restore placeholders in each sentence
+    restored_sentences = []
+    for part in parts:
+        restored = part
+        for token, original in placeholder_map.items():
+            if token in restored:
+                restored = restored.replace(token, original)
+        restored = restored.strip()
+        if restored:
+            restored_sentences.append(restored)
+            
+    return restored_sentences
+
+
+def _split_sentences(full_text, pages, file_type, paragraphs=None):
+    """Split text into sentences while preserving location information and section headers."""
     sentences = []
+    current_clause_title = None
     
     if file_type == 'pdf' and pages:
         for page_info in pages:
@@ -206,7 +255,7 @@ def _split_sentences(full_text, pages, file_type, paragraphs=None):
             if not page_text.strip():
                 continue
             
-            raw_sentences = re.split(pattern, page_text)
+            raw_sentences = _split_into_sentences_raw(page_text)
             char_pos = 0
             for raw in raw_sentences:
                 raw = raw.strip()
@@ -219,6 +268,8 @@ def _split_sentences(full_text, pages, file_type, paragraphs=None):
                 
                 line_ref = _find_line_for_text(raw, page_info.get('lines', []))
                 clause_title = _extract_clause_title(raw, page_text, idx)
+                if clause_title:
+                    current_clause_title = clause_title
                 
                 sentences.append({
                     'text': raw,
@@ -226,7 +277,7 @@ def _split_sentences(full_text, pages, file_type, paragraphs=None):
                     'paragraph': None,
                     'paragraph_reference': None,
                     'line_ref': line_ref,
-                    'clause_title': clause_title,
+                    'clause_title': clause_title or current_clause_title,
                     'source': f'Page {page_num}',
                 })
                 
@@ -238,7 +289,7 @@ def _split_sentences(full_text, pages, file_type, paragraphs=None):
             para_num = para_info['para_num']
             source = para_info['source']
             
-            raw_sentences = re.split(pattern, para_text)
+            raw_sentences = _split_into_sentences_raw(para_text)
             
             for raw in raw_sentences:
                 raw = raw.strip()
@@ -246,6 +297,8 @@ def _split_sentences(full_text, pages, file_type, paragraphs=None):
                     continue
                 
                 clause_title = _extract_clause_title(raw, para_text, 0)
+                if clause_title:
+                    current_clause_title = clause_title
                 
                 sentences.append({
                     'text': raw,
@@ -253,7 +306,7 @@ def _split_sentences(full_text, pages, file_type, paragraphs=None):
                     'paragraph': para_num,
                     'paragraph_reference': source,
                     'line_ref': None,
-                    'clause_title': clause_title,
+                    'clause_title': clause_title or current_clause_title,
                     'source': source,
                 })
     

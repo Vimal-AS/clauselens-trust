@@ -63,6 +63,10 @@ def _normalize_whitespace(text):
         return ''
     text = text.replace('\ufb01', 'fi').replace('\ufb02', 'fl')
     text = text.replace('\ufb00', 'ff').replace('\ufb03', 'ffi').replace('\ufb04', 'ffl')
+    text = text.replace('“', '"').replace('”', '"')
+    text = text.replace('‘', "'").replace('’', "'")
+    text = text.replace('—', '-').replace('–', '-')
+    text = text.replace('\u00a0', ' ')
     text = re.sub(r'\s+', ' ', text)
     text = text.replace('\u00ad', '')
     text = re.sub(r'-\s*\n\s*', '', text)

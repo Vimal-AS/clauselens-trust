@@ -10,11 +10,14 @@ NUMBER_WORDS = {
     'sixteen': 16, 'seventeen': 17, 'eighteen': 18, 'nineteen': 19, 'twenty': 20,
     'twenty-one': 21, 'twenty-two': 22, 'twenty-three': 23, 'twenty-four': 24,
     'twenty-five': 25, 'twenty-six': 26, 'twenty-seven': 27, 'twenty-eight': 28,
-    'twenty-nine': 29, 'thirty': 30, 'thirty-one': 31, 'forty': 40, 'forty-five': 45,
-    'fifty': 50, 'sixty': 60, 'seventy': 70, 'seventy-five': 75, 'eighty': 80, 'ninety': 90,
+    'twenty-nine': 29, 'thirty': 30, 'thirty-one': 31, 'thirty-five': 35,
+    'forty': 40, 'forty-five': 45, 'fifty': 50, 'sixty': 60, 'seventy': 70,
+    'seventy-five': 75, 'eighty': 80, 'ninety': 90,
     'hundred': 100, 'one hundred': 100, 'ninety-one': 91, 'one hundred and twenty': 120,
     'one hundred twenty': 120, 'one hundred eighty': 180, 'three hundred sixty-five': 365,
     'three hundred sixty five': 365, 'three hundred and sixty-five': 365,
+    'first': 1, 'second': 2, 'third': 3, 'fourth': 4, 'fifth': 5,
+    'thirtieth': 30, 'sixtieth': 60, 'ninetieth': 90,
 }
 
 
@@ -193,6 +196,34 @@ def detect_payment(sentences, config):
             ))
             continue
             
+        # Check payment due upon receipt / presentation of invoice
+        if re.search(r'(?:due|payable|paid)\s+(?:immediately\s+)?upon\s+(?:receipt|presentation)', text, re.IGNORECASE):
+            findings.append(_make_finding(
+                category='payment',
+                result_type='match',
+                policy_expected=f'Payment within {max_days} days',
+                condition_detected='Payment due upon receipt of invoice',
+                evidence=sent,
+                explanation='The contract specifies payment due upon receipt of invoice, which complies with your policy limit.',
+                impact='Payment is expected immediately upon receipt.',
+                action='No action needed.',
+            ))
+            continue
+
+        # Check discretionary or internal billing cycle (ambiguous)
+        if re.search(r'(?:client(?:\'s)?\s+(?:internal\s+)?(?:billing|payment)\s+cycle|as\s+mutually\s+agreed(?:\s+from\s+time\s+to\s+time)?)', text, re.IGNORECASE) and not re.search(r'\b\d+\s+days\b', text, re.IGNORECASE):
+            findings.append(_make_finding(
+                category='payment',
+                result_type='uncertain',
+                policy_expected=f'Payment within {max_days} days',
+                condition_detected='Discretionary payment timeline',
+                evidence=sent,
+                explanation='Payment timing is left to internal schedules or future mutual agreement without a fixed day limit.',
+                impact='Payment terms are open-ended and cannot be enforced to a firm timeline.',
+                action='Request explicit payment timeline (e.g., Net 30 days).',
+            ))
+            continue
+            
         # Check Net XX
         net_match = re.search(r'net[\s-](\d+)', text, re.IGNORECASE)
         if net_match:
@@ -329,7 +360,7 @@ def detect_renewal(sentences, config):
     renewal_re = re.compile('|'.join(renewal_patterns), re.IGNORECASE)
     
     notice_patterns = [
-        r"(\d+|[a-zA-Z\s-]+(?:\(\d+\))?)\s*(?:calendar\s+|business\s+)?days?(?:['\s]+)?(?:prior|advance|before|written)\s*(?:notice|notification)",
+        r"(\d+|[a-zA-Z\s-]+(?:\(\d+\))?)\s*(?:calendar\s+|business\s+)?days?(?:['\s]+)?(?:(?:prior|advance|before|written)\s+)*(?:notice|notification)",
         r"(?:notice|notification)\s+(?:of\s+)?(?:at\s+least\s+|no\s+less\s+than\s+|not\s+less\s+than\s+|unless\s+)?(\d+|[a-zA-Z\s-]+(?:\(\d+\))?)\s*(?:calendar\s+|business\s+)?days?",
         r"unless\s+(\d+|[a-zA-Z\s-]+(?:\(\d+\))?)\s*days",
     ]
@@ -369,6 +400,16 @@ def detect_renewal(sentences, config):
                 if num is not None:
                     notice_days = num
                     break
+
+        if notice_days is None:
+            # Check month-based notice window (e.g., "one (1) month prior written notice")
+            month_match = re.search(r"(\d+|[a-zA-Z\s-]+(?:\(\d+\))?)\s*months?(?:['\s]+)?(?:prior\s+|advance\s+|written\s+)?notice", text, re.IGNORECASE)
+            if month_match:
+                num = parse_number(month_match.group(1))
+                if num is not None:
+                    notice_days = num * 30
+            elif re.search(r'(?:immediately\s+upon|immediate)\s+(?:written\s+)?notice', text, re.IGNORECASE):
+                notice_days = 0
         
         conditions = []
         is_conflict = False
@@ -536,7 +577,7 @@ def detect_termination(sentences, config):
     ]
     
     notice_patterns = [
-        r"(\d+|[a-zA-Z\s-]+(?:\(\d+\))?)\s*(?:calendar\s+|business\s+)?days?(?:['\s]+)?(?:prior\s+|advance\s+|written\s+)?notice",
+        r"(\d+|[a-zA-Z\s-]+(?:\(\d+\))?)\s*(?:calendar\s+|business\s+)?days?(?:['\s]+)?(?:(?:prior|advance|written)\s+)*notice",
         r"notice\s+(?:of\s+)?(?:at\s+least\s+|no\s+less\s+than\s+)?(\d+|[a-zA-Z\s-]+(?:\(\d+\))?)\s*(?:calendar\s+|business\s+)?days?",
     ]
     
@@ -558,6 +599,16 @@ def detect_termination(sentences, config):
                 if num is not None:
                     notice_days = num
                     break
+
+        if notice_days is None:
+            # Check month-based notice window (e.g., "one (1) month prior written notice")
+            month_match = re.search(r"(\d+|[a-zA-Z\s-]+(?:\(\d+\))?)\s*months?(?:['\s]+)?(?:prior\s+|advance\s+|written\s+)?notice", text, re.IGNORECASE)
+            if month_match:
+                num = parse_number(month_match.group(1))
+                if num is not None:
+                    notice_days = num * 30
+            elif re.search(r'(?:immediately\s+upon|immediate)\s+(?:written\s+)?notice', text, re.IGNORECASE):
+                notice_days = 0
         
         conditions = []
         is_conflict = False
@@ -617,15 +668,28 @@ JURISDICTION_ALIASES = {
     'hyderabad': ('Telangana', 'India'),
     'pune': ('Maharashtra', 'India'),
     'ahmedabad': ('Gujarat', 'India'),
+    'gurugram': ('Haryana', 'India'),
+    'gurgaon': ('Haryana', 'India'),
+    'noida': ('Uttar Pradesh', 'India'),
+    'karnataka': ('Karnataka', 'India'),
+    'maharashtra': ('Maharashtra', 'India'),
+    'tamil nadu': ('Tamil Nadu', 'India'),
+    'telangana': ('Telangana', 'India'),
+    'gujarat': ('Gujarat', 'India'),
+    'west bengal': ('West Bengal', 'India'),
     'india': (None, 'India'),
     'republic of india': (None, 'India'),
     'indian courts': (None, 'India'),
     'singapore': (None, 'Singapore'),
     'singapore courts': (None, 'Singapore'),
     'republic of singapore': (None, 'Singapore'),
+    'siac': (None, 'Singapore'),
+    'singapore international arbitration centre': (None, 'Singapore'),
     'england': (None, 'England'),
     'england and wales': (None, 'England'),
     'london': (None, 'England'),
+    'lcia': (None, 'England'),
+    'london court of international arbitration': (None, 'England'),
     'united kingdom': (None, 'United Kingdom'),
     'uk': (None, 'United Kingdom'),
     'united states': (None, 'United States'),
@@ -634,19 +698,29 @@ JURISDICTION_ALIASES = {
     'new york': ('New York', 'United States'),
     'california': ('California', 'United States'),
     'delaware': ('Delaware', 'United States'),
+    'delaware court of chancery': ('Delaware', 'United States'),
     'texas': ('Texas', 'United States'),
+    'american arbitration association': (None, 'United States'),
     'hong kong': (None, 'Hong Kong'),
+    'hkiac': (None, 'Hong Kong'),
     'dubai': (None, 'UAE'),
     'uae': (None, 'UAE'),
+    'difc': (None, 'UAE'),
+    'dubai international financial centre': (None, 'UAE'),
     'australia': (None, 'Australia'),
+    'sydney': ('New South Wales', 'Australia'),
+    'new south wales': ('New South Wales', 'Australia'),
     'germany': (None, 'Germany'),
+    'frankfurt': ('Hesse', 'Germany'),
     'france': (None, 'France'),
+    'paris': ('Île-de-France', 'France'),
+    'icc': (None, 'France'),
     'japan': (None, 'Japan'),
+    'tokyo': (None, 'Japan'),
     'china': (None, 'China'),
     'canada': (None, 'Canada'),
-    'tamil nadu': ('Tamil Nadu', 'India'),
-    'karnataka': ('Karnataka', 'India'),
-    'maharashtra': ('Maharashtra', 'India'),
+    'ontario': ('Ontario', 'Canada'),
+    'toronto': ('Ontario', 'Canada'),
 }
 
 
