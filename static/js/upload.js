@@ -209,12 +209,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span class="demo-card-conflicts">${escapeHtml(d.conflicts_summary)}</span>
                     </div>
                 </div>
-                <div class="demo-card-actions" style="display:flex; gap:8px; align-items:center;">
-                    <a href="/api/contracts/demo/${d.id}/file" target="_blank" class="btn btn-sm btn-outline" style="text-decoration:none;" title="Download original sample contract file">
-                        Download (${d.file_type.toUpperCase()}) ↗
-                    </a>
+                <div class="demo-card-actions">
                     <button type="button" class="btn btn-sm btn-primary select-demo-btn" data-id="${d.id}">
-                        Analyse &amp; Open &rarr;
+                        Open
                     </button>
                 </div>
             `;
@@ -225,7 +222,7 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.addEventListener('click', () => {
                 const demoId = btn.getAttribute('data-id');
                 demoContractsModal.style.display = 'none';
-                loadSelectedDemo(demoId, true);
+                loadSelectedDemo(demoId, false);
             });
         });
     }
@@ -251,6 +248,9 @@ document.addEventListener('DOMContentLoaded', () => {
             selectedFileName.textContent = currentUploadedFile.original_filename;
             const sizeMb = (currentUploadedFile.file_size / (1024 * 1024)).toFixed(2);
             selectedFileMeta.textContent = `${currentUploadedFile.file_type.toUpperCase()} • ${sizeMb} MB (Sample Document)`;
+            if (fileIconBadge) {
+                fileIconBadge.className = `file-icon file-icon-${currentUploadedFile.file_type}`;
+            }
 
             uploadZoneIdle.style.display = 'none';
             uploadZoneSelected.style.display = 'flex';
