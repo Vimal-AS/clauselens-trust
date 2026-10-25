@@ -22,5 +22,5 @@ ENV FLASK_ENV=production
 ENV PYTHONUNBUFFERED=1
 EXPOSE 5000
 
-# Run with Gunicorn WSGI production server
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "2", "--threads", "4", "--timeout", "120", "app:app"]
+# Run with Gunicorn WSGI production server (binds to $PORT or default 5000)
+CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:${PORT:-5000} --workers 2 --threads 4 --timeout 120 app:app"]
