@@ -382,6 +382,14 @@ document.addEventListener('DOMContentLoaded', () => {
         return qs ? `?${qs}` : '';
     }
 
+    const downloadSourceDocBtn = document.getElementById('downloadSourceDocBtn');
+    if (downloadSourceDocBtn) {
+        downloadSourceDocBtn.addEventListener('click', () => {
+            if (!currentAnalysisId) return;
+            window.open(`/api/analyses/${currentAnalysisId}/source-file`, '_blank');
+        });
+    }
+
     exportJsonBtn.addEventListener('click', () => {
         if (!currentAnalysisId) return;
         const qs = getExportQuery();

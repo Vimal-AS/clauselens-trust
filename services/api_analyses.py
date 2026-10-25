@@ -469,3 +469,20 @@ def get_analysis_text(analysis_id):
     })
 
 
+@analyses_bp.route('/api/analyses/<analysis_id>/source-file', methods=['GET'])
+def get_analysis_source_file(analysis_id):
+    """Directly view or download the source contract document for an analysis."""
+    conn = get_db()
+    row = conn.execute("SELECT filename, original_filename, file_type FROM analyses WHERE id=?", (analysis_id,)).fetchone()
+    conn.close()
+    if not row:
+        return jsonify({'error': 'Analysis not found.'}), 404
+        
+    file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], row['filename'])
+    if not os.path.exists(file_path):
+        return jsonify({'error': 'Source file not found on server.'}), 404
+        
+    mimetype = 'application/pdf' if row['file_type'] == 'pdf' else 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    return send_file(file_path, mimetype=mimetype, as_attachment=False, download_name=row['original_filename'])
+
+

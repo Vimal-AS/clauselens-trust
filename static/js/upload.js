@@ -209,9 +209,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span class="demo-card-conflicts">${escapeHtml(d.conflicts_summary)}</span>
                     </div>
                 </div>
-                <button type="button" class="btn btn-sm btn-primary select-demo-btn" data-id="${d.id}">
-                    Select Contract &rarr;
-                </button>
+                <div class="demo-card-actions" style="display:flex; gap:8px; align-items:center;">
+                    <a href="/api/contracts/demo/${d.id}/file" target="_blank" class="btn btn-sm btn-outline" style="text-decoration:none;" title="Open or download original contract file">
+                        Open File ↗
+                    </a>
+                    <button type="button" class="btn btn-sm btn-primary select-demo-btn" data-id="${d.id}">
+                        Select &rarr;
+                    </button>
+                </div>
             `;
             demoCardsList.appendChild(card);
         });

@@ -1,7 +1,7 @@
 import os
 import uuid
 import zipfile
-from flask import Blueprint, jsonify, request, current_app
+from flask import Blueprint, jsonify, request, current_app, send_file
 from werkzeug.utils import secure_filename
 
 contracts_bp = Blueprint('contracts', __name__)
@@ -217,6 +217,34 @@ def load_demo_contract():
             'title': selected_demo['title']
         }
     })
+
+
+@contracts_bp.route('/api/contracts/demo/<demo_id>/file', methods=['GET'])
+def get_demo_file(demo_id):
+    """Directly view or download a demo PDF or DOCX file."""
+    selected_demo = next((d for d in DEMO_CONTRACTS if d['id'] == demo_id), None)
+    if not selected_demo:
+        return jsonify({'error': 'Demo contract not found.'}), 404
+        
+    fixture_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'tests', 'fixtures', selected_demo['filename'])
+    if not os.path.exists(fixture_path):
+        return jsonify({'error': 'File not found in fixtures.'}), 404
+        
+    mimetype = 'application/pdf' if selected_demo['file_type'] == 'pdf' else 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    return send_file(fixture_path, mimetype=mimetype, as_attachment=False, download_name=selected_demo['display_name'])
+
+
+@contracts_bp.route('/api/contracts/file/<uuid_name>', methods=['GET'])
+def get_uploaded_file(uuid_name):
+    """Directly view or download an uploaded contract file."""
+    safe_name = os.path.basename(uuid_name)
+    file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], safe_name)
+    if not os.path.exists(file_path):
+        return jsonify({'error': 'File not found.'}), 404
+        
+    ext = safe_name.split('.')[-1].lower()
+    mimetype = 'application/pdf' if ext == 'pdf' else 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    return send_file(file_path, mimetype=mimetype, as_attachment=False)
 
 
 @contracts_bp.route('/api/contracts/analyse', methods=['POST'])
