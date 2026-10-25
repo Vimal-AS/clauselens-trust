@@ -15,8 +15,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Create persistent storage directories
-RUN mkdir -p database uploads reports && \
-    chmod -R 755 database uploads reports
+RUN mkdir -p database uploads reports demo_contracts && \
+    chmod -R 755 database uploads reports demo_contracts
 
 ENV FLASK_ENV=production
 ENV PYTHONUNBUFFERED=1

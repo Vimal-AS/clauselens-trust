@@ -187,6 +187,20 @@ def get_demo_list():
     return jsonify({'demos': DEMO_CONTRACTS})
 
 
+def _get_demo_fixture_path(filename):
+    """Find demo file path in demo_contracts/ or tests/fixtures/."""
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    # Check dedicated demo_contracts directory first
+    p1 = os.path.join(base_dir, 'demo_contracts', filename)
+    if os.path.exists(p1):
+        return p1
+    # Fallback to tests/fixtures
+    p2 = os.path.join(base_dir, 'tests', 'fixtures', filename)
+    if os.path.exists(p2):
+        return p2
+    return None
+
+
 @contracts_bp.route('/api/contracts/demo', methods=['POST'])
 def load_demo_contract():
     import shutil
@@ -195,9 +209,9 @@ def load_demo_contract():
     
     selected_demo = next((d for d in DEMO_CONTRACTS if d['id'] == demo_id), DEMO_CONTRACTS[0])
     
-    fixture_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'tests', 'fixtures', selected_demo['filename'])
-    if not os.path.exists(fixture_path):
-        return jsonify({'error': f"Demo contract '{selected_demo['filename']}' not found in fixtures."}), 404
+    fixture_path = _get_demo_fixture_path(selected_demo['filename'])
+    if not fixture_path or not os.path.exists(fixture_path):
+        return jsonify({'error': f"Demo contract '{selected_demo['filename']}' not found on server."}), 404
         
     ext = selected_demo['file_type']
     uuid_name = f"{uuid.uuid4().hex}.{ext}"
@@ -226,12 +240,13 @@ def get_demo_file(demo_id):
     if not selected_demo:
         return jsonify({'error': 'Demo contract not found.'}), 404
         
-    fixture_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'tests', 'fixtures', selected_demo['filename'])
-    if not os.path.exists(fixture_path):
-        return jsonify({'error': 'File not found in fixtures.'}), 404
+    fixture_path = _get_demo_fixture_path(selected_demo['filename'])
+    if not fixture_path or not os.path.exists(fixture_path):
+        return jsonify({'error': 'File not found on server.'}), 404
         
     mimetype = 'application/pdf' if selected_demo['file_type'] == 'pdf' else 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-    return send_file(fixture_path, mimetype=mimetype, as_attachment=False, download_name=selected_demo['display_name'])
+    as_attachment = request.args.get('download', 'false').lower() == 'true' or selected_demo['file_type'] == 'docx'
+    return send_file(fixture_path, mimetype=mimetype, as_attachment=as_attachment, download_name=selected_demo['display_name'])
 
 
 @contracts_bp.route('/api/contracts/file/<uuid_name>', methods=['GET'])

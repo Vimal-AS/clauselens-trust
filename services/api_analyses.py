@@ -434,13 +434,23 @@ def get_analysis_text(analysis_id):
         
     file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], row['filename'])
     if not os.path.exists(file_path) and row['is_sample']:
-        fixtures_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'tests', 'fixtures')
-        for f in os.listdir(fixtures_dir):
-            if f.lower() in row['original_filename'].lower() or row['original_filename'].lower() in f.lower():
-                file_path = os.path.join(fixtures_dir, f)
-                break
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        candidate_dirs = [
+            os.path.join(base_dir, 'demo_contracts'),
+            os.path.join(base_dir, 'tests', 'fixtures')
+        ]
+        for cdir in candidate_dirs:
+            if os.path.isdir(cdir):
+                for f in os.listdir(cdir):
+                    if f.lower() in row['original_filename'].lower() or row['original_filename'].lower() in f.lower():
+                        file_path = os.path.join(cdir, f)
+                        break
+                if os.path.exists(file_path):
+                    break
         if not os.path.exists(file_path):
-            file_path = os.path.join(fixtures_dir, 'sample_freelance_contract.pdf')
+            p_fallback = os.path.join(base_dir, 'demo_contracts', 'sample_freelance_contract.pdf')
+            if os.path.exists(p_fallback):
+                file_path = p_fallback
             
     if not os.path.exists(file_path):
         conn.close()
@@ -479,6 +489,20 @@ def get_analysis_source_file(analysis_id):
         return jsonify({'error': 'Analysis not found.'}), 404
         
     file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], row['filename'])
+    if not os.path.exists(file_path):
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        candidate_dirs = [
+            os.path.join(base_dir, 'demo_contracts'),
+            os.path.join(base_dir, 'tests', 'fixtures')
+        ]
+        for cdir in candidate_dirs:
+            if os.path.isdir(cdir):
+                for f in os.listdir(cdir):
+                    if f.lower() in row['original_filename'].lower() or row['original_filename'].lower() in f.lower():
+                        file_path = os.path.join(cdir, f)
+                        break
+                if os.path.exists(file_path):
+                    break
     if not os.path.exists(file_path):
         return jsonify({'error': 'Source file not found on server.'}), 404
         
