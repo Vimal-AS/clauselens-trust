@@ -17,10 +17,13 @@ app.config['REPORTS_FOLDER'] = os.path.join(os.path.dirname(os.path.abspath(__fi
 for folder in [app.config['UPLOAD_FOLDER'], app.config['REPORTS_FOLDER'], 'database']:
     os.makedirs(os.path.join(os.path.dirname(os.path.abspath(__file__)), folder) if folder == 'database' else folder, exist_ok=True)
 
-# Initialize database
-init_db()
-seed_default_policies()
-seed_default_settings()
+# Initialize database safely
+try:
+    init_db()
+    seed_default_policies()
+    seed_default_settings()
+except Exception as e:
+    app.logger.warning(f"Database init warning (can happen in concurrent workers): {e}")
 
 # Import and register blueprints
 from services.api_policies import policies_bp
