@@ -1,6 +1,6 @@
 /**
  * ClauseLens Trust - App-wide JavaScript
- * Theme switching, toast alerts, API helpers
+ * Theme switching, mobile navigation drawer, toast alerts, API helpers
  */
 
 // Theme Management
@@ -19,16 +19,34 @@ function applyTheme(theme) {
     localStorage.setItem(THEME_STORAGE_KEY, theme);
     
     const icon = document.getElementById('themeIcon');
+    const mobileIcon = document.getElementById('mobileThemeIcon');
     const text = document.getElementById('themeText');
-    if (icon && text) {
-        if (effectiveTheme === 'dark') {
-            icon.innerHTML = `<svg class="theme-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`;
-            text.textContent = 'Light theme';
-        } else {
-            icon.innerHTML = `<svg class="theme-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
-            text.textContent = 'Dark theme';
-        }
+    
+    const sunSvg = `<svg class="theme-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`;
+    const moonSvg = `<svg class="theme-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
+    
+    if (icon) {
+        icon.innerHTML = effectiveTheme === 'dark' ? sunSvg : moonSvg;
     }
+    if (mobileIcon) {
+        mobileIcon.innerHTML = effectiveTheme === 'dark' ? sunSvg : moonSvg;
+    }
+    if (text) {
+        text.textContent = effectiveTheme === 'dark' ? 'Light theme' : 'Dark theme';
+    }
+}
+
+function toggleCurrentTheme() {
+    const current = document.documentElement.getAttribute('data-theme') || 'light';
+    const next = current === 'dark' ? 'light' : 'dark';
+    applyTheme(next);
+    
+    // Sync with backend settings
+    fetch('/api/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ settings: { theme: next } })
+    }).catch(() => {});
 }
 
 function initTheme() {
@@ -37,19 +55,84 @@ function initTheme() {
     
     const toggleBtn = document.getElementById('themeToggleBtn');
     if (toggleBtn) {
-        toggleBtn.addEventListener('click', () => {
-            const current = document.documentElement.getAttribute('data-theme') || 'light';
-            const next = current === 'dark' ? 'light' : 'dark';
-            applyTheme(next);
-            
-            // Sync with backend settings
-            fetch('/api/settings', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ settings: { theme: next } })
-            }).catch(() => {});
+        toggleBtn.addEventListener('click', toggleCurrentTheme);
+    }
+    
+    const mobileThemeBtn = document.getElementById('mobileThemeBtn');
+    if (mobileThemeBtn) {
+        mobileThemeBtn.addEventListener('click', toggleCurrentTheme);
+    }
+}
+
+// Mobile Navigation Drawer
+function initMobileNav() {
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const sidebarCloseBtn = document.getElementById('sidebarCloseBtn');
+    const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+    const sidebar = document.getElementById('sidebar');
+
+    if (!mobileMenuBtn || !sidebar) return;
+
+    function openMobileNav() {
+        sidebar.classList.add('mobile-open');
+        if (sidebarBackdrop) sidebarBackdrop.classList.add('active');
+        document.body.classList.add('drawer-open');
+        mobileMenuBtn.setAttribute('aria-expanded', 'true');
+    }
+
+    function closeMobileNav() {
+        sidebar.classList.remove('mobile-open');
+        if (sidebarBackdrop) sidebarBackdrop.classList.remove('active');
+        document.body.classList.remove('drawer-open');
+        mobileMenuBtn.setAttribute('aria-expanded', 'false');
+    }
+
+    mobileMenuBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = sidebar.classList.contains('mobile-open');
+        if (isOpen) {
+            closeMobileNav();
+        } else {
+            openMobileNav();
+        }
+    });
+
+    if (sidebarCloseBtn) {
+        sidebarCloseBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            closeMobileNav();
         });
     }
+
+    if (sidebarBackdrop) {
+        sidebarBackdrop.addEventListener('click', () => {
+            closeMobileNav();
+        });
+    }
+
+    // Close when clicking any nav link on mobile
+    const navLinks = sidebar.querySelectorAll('.nav-link');
+    navLinks.forEach(link => {
+        link.addEventListener('click', () => {
+            if (window.innerWidth <= 900) {
+                closeMobileNav();
+            }
+        });
+    });
+
+    // Close on Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && sidebar.classList.contains('mobile-open')) {
+            closeMobileNav();
+        }
+    });
+
+    // Close automatically if resizing back to desktop width
+    window.addEventListener('resize', () => {
+        if (window.innerWidth > 900 && sidebar.classList.contains('mobile-open')) {
+            closeMobileNav();
+        }
+    });
 }
 
 // Toast Notifications
@@ -90,4 +173,5 @@ function escapeHtml(str) {
 // Initialize on DOM load
 document.addEventListener('DOMContentLoaded', () => {
     initTheme();
+    initMobileNav();
 });

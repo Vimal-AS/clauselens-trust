@@ -274,7 +274,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <button type="button" class="btn btn-sm btn-outline save-review-btn" data-id="${f.id}">Save Note</button>
                         </div>
                         <div>
-                            ${hasPage ? `<button type="button" class="btn btn-sm btn-ghost view-page-btn" data-page="${f.page_number}" data-finding="${f.id}">📄 View Page Highlight</button>` : ''}
+                            ${hasPage ? `<button type="button" class="btn btn-sm btn-ghost view-page-btn" data-page="${f.page_number}" data-finding="${f.id}"><svg class="btn-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> View Page Highlight</button>` : ''}
                         </div>
                     </div>
                 </div>

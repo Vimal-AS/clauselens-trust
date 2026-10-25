@@ -140,7 +140,7 @@ document.addEventListener('DOMContentLoaded', () => {
             selectedFileName.textContent = currentUploadedFile.original_filename;
             const sizeMb = (currentUploadedFile.file_size / (1024 * 1024)).toFixed(2);
             selectedFileMeta.textContent = `${currentUploadedFile.file_type.toUpperCase()} • ${sizeMb} MB`;
-            fileIconBadge.textContent = currentUploadedFile.file_type === 'pdf' ? '📕' : '📘';
+            fileIconBadge.className = `file-icon file-icon-${currentUploadedFile.file_type}`;
 
             uploadZoneIdle.style.display = 'none';
             uploadZoneSelected.style.display = 'flex';
