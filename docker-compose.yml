@@ -1,0 +1,15 @@
+services:
+  clauselens:
+    build: .
+    container_name: clauselens-trust
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./data:/app/database
+      - ./uploads:/app/uploads
+      - ./reports:/app/reports
+    environment:
+      - FLASK_ENV=production
+      - SECRET_KEY=clauselens-production-secret-key-change-me
+      - UPLOAD_MAX_SIZE_MB=10

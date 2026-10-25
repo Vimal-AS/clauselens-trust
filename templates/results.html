@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+    <div class="header-titles">
+        <div class="title-with-badge">
+            <h1 class="page-title" id="resultsDocTitle">Risk Results</h1>
+            <span class="sample-badge" id="sampleDocBadge" style="display:none">Sample Document</span>
+        </div>
+        <p class="page-subtitle" id="resultsDocSubtitle">Verbatim quote evidence & policy comparison report</p>
+    </div>
+    <div class="header-actions">
+        <button type="button" class="btn btn-outline btn-sm" id="viewPlainTextBtn">
+            <svg class="btn-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>
+            Plain Text View
+        </button>
+        <button type="button" class="btn btn-outline btn-sm" id="exportJsonBtn">
+            <svg class="btn-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export JSON
+        </button>
+        <button type="button" class="btn btn-outline btn-sm" id="exportPdfBtn">
+            <svg class="btn-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            Export PDF
+        </button>
+    </div>
+</div>
+
+<!-- Scope bar -->
+<div class="export-scope-bar">
+    <div class="scope-radios">
+        <label class="radio-label">
+            <input type="radio" name="exportScope" value="all" checked>
+            <span>All Findings (<span id="allFindingsCount">0</span>)</span>
+        </label>
+        <label class="radio-label">
+            <input type="radio" name="exportScope" value="filtered">
+            <span>Current Filtered View (<span id="filteredFindingsCount">0</span>)</span>
+        </label>
+    </div>
+    <div class="doc-selector-wrap">
+        <label for="analysisSelect" class="form-label-inline">Switch Document:</label>
+        <select id="analysisSelect" class="form-control form-control-sm"></select>
+    </div>
+</div>
+
+<!-- Summary Cards (Real data) -->
+<div class="summary-cards-grid">
+    <div class="stat-card" data-card="total">
+        <div class="stat-number" id="statTotal">0</div>
+        <div class="stat-label">Total Findings</div>
+    </div>
+    <div class="stat-card stat-high" data-card="high">
+        <div class="stat-number" id="statHigh">0</div>
+        <div class="stat-label">High Priority</div>
+    </div>
+    <div class="stat-card stat-medium" data-card="medium">
+        <div class="stat-number" id="statMedium">0</div>
+        <div class="stat-label">Medium Priority</div>
+    </div>
+    <div class="stat-card stat-low" data-card="low">
+        <div class="stat-number" id="statLow">0</div>
+        <div class="stat-label">Low Priority</div>
+    </div>
+    <div class="stat-card stat-conflict" data-card="conflicts">
+        <div class="stat-number" id="statConflicts">0</div>
+        <div class="stat-label">Conflicts</div>
+    </div>
+    <div class="stat-card stat-match" data-card="matches">
+        <div class="stat-number" id="statMatches">0</div>
+        <div class="stat-label">Matches</div>
+    </div>
+    <div class="stat-card stat-uncertain" data-card="uncertain">
+        <div class="stat-number" id="statUncertain">0</div>
+        <div class="stat-label">Uncertain</div>
+    </div>
+    <div class="stat-card stat-notfound" data-card="notfound">
+        <div class="stat-number" id="statNotFound">0</div>
+        <div class="stat-label">Not Found</div>
+    </div>
+</div>
+
+<!-- Filter Bar -->
+<div class="card filter-card">
+    <div class="filter-row">
+        <div class="filter-col">
+            <label for="filterSeverity" class="form-label-xs">Severity</label>
+            <select id="filterSeverity" class="form-control form-control-sm">
+                <option value="all">All Severities</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+            </select>
+        </div>
+        <div class="filter-col">
+            <label for="filterCategory" class="form-label-xs">Category</label>
+            <select id="filterCategory" class="form-control form-control-sm">
+                <option value="all">All Categories</option>
+                <option value="payment">Payment</option>
+                <option value="renewal">Renewal</option>
+                <option value="liability">Liability</option>
+                <option value="termination">Termination</option>
+                <option value="jurisdiction">Jurisdiction</option>
+                <option value="custom">Custom</option>
+            </select>
+        </div>
+        <div class="filter-col">
+            <label for="filterResultType" class="form-label-xs">Result Type</label>
+            <select id="filterResultType" class="form-control form-control-sm">
+                <option value="all">All Results</option>
+                <option value="conflict">Conflict</option>
+                <option value="uncertain">Uncertain</option>
+                <option value="not_found">Not Found</option>
+                <option value="match">Match</option>
+            </select>
+        </div>
+        <div class="filter-col">
+            <label for="filterVerification" class="form-label-xs">Verification</label>
+            <select id="filterVerification" class="form-control form-control-sm">
+                <option value="all">All Statuses</option>
+                <option value="verified">Verified</option>
+                <option value="needs_manual_review">Needs Manual Review</option>
+                <option value="unable_to_verify">Unable to Verify</option>
+            </select>
+        </div>
+        <div class="filter-col">
+            <label for="filterReviewStatus" class="form-label-xs">Review Status</label>
+            <select id="filterReviewStatus" class="form-control form-control-sm">
+                <option value="all">All Statuses</option>
+                <option value="not_reviewed">Not Reviewed</option>
+                <option value="reviewed">Reviewed</option>
+                <option value="needs_attention">Needs Attention</option>
+            </select>
+        </div>
+        <div class="filter-col search-col">
+            <label for="filterSearch" class="form-label-xs">Search Quotes & Clauses</label>
+            <input type="text" id="filterSearch" class="form-control form-control-sm" placeholder="Keywords in quotes...">
+        </div>
+        <div class="filter-col reset-col">
+            <button type="button" class="btn btn-ghost btn-sm" id="clearFiltersBtn">Clear Filters</button>
+        </div>
+    </div>
+</div>
+
+<!-- Findings Container -->
+<div class="findings-container">
+    <div class="findings-header">
+        <h2 class="section-title">Findings (<span id="visibleFindingsCount">0</span>)</h2>
+        <span class="severity-disclaimer-note">Severity ratings reflect review priority, not legal judgment.</span>
+    </div>
+
+    <div class="empty-state" id="findingsEmptyState" style="display:none">
+        <div class="empty-icon-svg">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </div>
+        <p class="empty-title">No matching findings</p>
+        <p class="empty-desc">No clauses match your current filter selection. Try clearing or relaxing filters.</p>
+    </div>
+
+    <div class="findings-list" id="findingsList">
+        <!-- Findings rendered dynamically -->
+    </div>
+</div>
+
+<!-- PDF Page Preview Modal -->
+<div class="modal-backdrop" id="pdfPreviewModal" style="display:none">
+    <div class="modal-card modal-lg">
+        <div class="modal-header">
+            <h3 class="modal-title" id="pdfPreviewTitle">Document Evidence Page</h3>
+            <button type="button" class="modal-close-btn" id="closePdfPreviewBtn">&times;</button>
+        </div>
+        <div class="modal-body text-center">
+            <div id="pdfImageContainer" class="pdf-image-wrap">
+                <div class="spinner" id="pdfPageSpinner"></div>
+                <img id="pdfPageImage" src="" alt="Page Preview" style="display:none">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Extracted Plain Text Modal -->
+<div class="modal-backdrop" id="plainTextModal" style="display:none">
+    <div class="modal-card modal-lg">
+        <div class="modal-header">
+            <div>
+                <h3 class="modal-title" id="plainTextDocTitle">Extracted Plain Text</h3>
+                <p class="modal-subtitle" id="plainTextDocStats">Verbatim text representation from source contract</p>
+            </div>
+            <div class="plain-text-modal-actions">
+                <button type="button" class="btn btn-sm btn-outline" id="copyPlainTextBtn">
+                    <svg class="btn-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                    Copy Text
+                </button>
+                <button type="button" class="modal-close-btn" id="closePlainTextBtn">&times;</button>
+            </div>
+        </div>
+        <div class="modal-body">
+            <div class="plain-text-search-bar mb-3">
+                <input type="text" id="plainTextFilter" class="form-control form-control-sm" placeholder="Search within document plain text...">
+            </div>
+            <div class="plain-text-container" id="plainTextContainer">
+                <pre id="plainTextContent">Loading extracted document text...</pre>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/results.js"></script>
+{% endblock %}

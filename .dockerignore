@@ -1,0 +1,16 @@
+venv/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+tests/
+create_fixtures.py
+generate_expected.py
+test_live_server.py
+.git/
+.gitignore
+.env
+clauselens.db
+uploads/*.pdf
+uploads/*.docx
+reports/*.pdf

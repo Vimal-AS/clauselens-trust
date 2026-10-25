@@ -1,0 +1,61 @@
+{
+  "fixture_name": "ambiguous_payment_contract.pdf",
+  "file_type": "pdf",
+  "total_findings": 5,
+  "summary": {
+    "conflicts": 0,
+    "matches": 3,
+    "uncertain": 1,
+    "not_found": 1,
+    "high": 0,
+    "medium": 1,
+    "low": 3
+  },
+  "findings": [
+    {
+      "category": "payment",
+      "result_type": "uncertain",
+      "severity": "medium",
+      "policy_expected": "Payment within 30 days",
+      "condition_detected": "Ambiguous payment term: \"within a reasonable time\"",
+      "evidence_quote": "Compensation\nThe Client shall pay all undisputed amounts within a reasonable time following submission of an itemized\nstatement.",
+      "verification_status": "verified"
+    },
+    {
+      "category": "renewal",
+      "result_type": "not_found",
+      "severity": null,
+      "policy_expected": "Auto-renewal not allowed; Max renewal term: 12 months; Min cancellation notice: 30 days",
+      "condition_detected": "No matching clause found in the contract.",
+      "evidence_quote": "",
+      "verification_status": "verified"
+    },
+    {
+      "category": "liability",
+      "result_type": "match",
+      "severity": "low",
+      "policy_expected": "Unlimited liability not allowed; Liability cap required",
+      "condition_detected": "Liability cap clause detected",
+      "evidence_quote": "Liability\nThe aggregate liability of either party shall not exceed the total fees paid under this Agreement.",
+      "verification_status": "verified"
+    },
+    {
+      "category": "termination",
+      "result_type": "match",
+      "severity": "low",
+      "policy_expected": "Min notice: 30 days; Flag one-sided termination",
+      "condition_detected": "Termination clause detected",
+      "evidence_quote": "Term\nThis Agreement terminates upon completion of the deliverables unless extended by mutual agreement.",
+      "verification_status": "verified"
+    },
+    {
+      "category": "jurisdiction",
+      "result_type": "match",
+      "severity": "low",
+      "policy_expected": "Preferred: India; Accepted: India",
+      "condition_detected": "Jurisdiction: Tamil Nadu, India",
+      "evidence_quote": "Governing Law\nThis Agreement shall be governed by the laws of India and subject to the jurisdiction of courts in Chennai.",
+      "verification_status": "verified"
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+# Python Virtual Environment
+venv/
+.venv/
+env/
+
+# Python cache & build
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+
+# Environment secrets
+.env
+
+# Local SQLite Database
+*.db
+*.db-journal
+*.db-wal
+clauselens.db
+
+# User Uploads & Generated Reports (keep folders via .gitkeep)
+uploads/*
+!uploads/.gitkeep
+reports/*
+!reports/.gitkeep
+
+# Operating System & IDEs
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

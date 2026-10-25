@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+    <div class="header-titles">
+        <h1 class="page-title">Contract Risk Analysis</h1>
+        <p class="page-subtitle">Evidence-based contract policy inspection with verbatim clause verification.</p>
+    </div>
+</div>
+
+<div class="home-grid">
+    <div class="card upload-card">
+        <div class="card-header">
+            <h2 class="card-title">Upload Contract Document</h2>
+            <span class="card-badge">PDF or DOCX</span>
+        </div>
+        <div class="card-body">
+            <div class="upload-zone" id="uploadZone">
+                <div class="upload-zone-idle" id="uploadZoneIdle">
+                    <div class="upload-icon-graphic">
+                        <svg class="upload-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="17 8 12 3 7 8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                    </div>
+                    <div class="upload-instructions">
+                        <p class="primary-text">Drag & drop your contract here, or <button type="button" class="btn-link" id="browseBtn">browse files</button></p>
+                        <p class="secondary-text">Supported formats: Adobe PDF (.pdf), Word Document (.docx) • Max 10 MB</p>
+                    </div>
+                </div>
+                <input type="file" id="fileInput" accept=".pdf,.docx" style="display:none">
+                
+                <div class="upload-zone-selected" id="uploadZoneSelected" style="display:none">
+                    <div class="file-icon" id="fileIconBadge">
+                        <svg class="doc-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                            <line x1="16" y1="13" x2="8" y2="13"/>
+                            <line x1="16" y1="17" x2="8" y2="17"/>
+                        </svg>
+                    </div>
+                    <div class="file-details">
+                        <div class="file-name" id="selectedFileName">contract.pdf</div>
+                        <div class="file-meta" id="selectedFileMeta">PDF • 1.2 MB</div>
+                    </div>
+                    <div class="file-actions">
+                        <button type="button" class="btn btn-sm btn-ghost" id="replaceFileBtn">Replace</button>
+                        <button type="button" class="btn btn-sm btn-ghost btn-danger-text" id="removeFileBtn">Remove</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert alert-error" id="uploadError" style="display:none">
+                <svg class="alert-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <span class="alert-message" id="uploadErrorMsg"></span>
+            </div>
+
+            <div class="analysis-status-box" id="analysisStatusBox" style="display:none">
+                <div class="status-indicator">
+                    <div class="spinner"></div>
+                    <div class="status-labels">
+                        <div class="status-stage" id="statusStageText">Extracting text...</div>
+                        <div class="status-subtext">Verifying quotes against exact source locations</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-buttons-row">
+                <button type="button" class="btn btn-primary" id="analyseBtn" disabled>
+                    <svg class="btn-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <span class="btn-text">Analyse Contract</span>
+                </button>
+                <button type="button" class="btn btn-secondary" id="demoContractBtn">
+                    <svg class="btn-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                    <span class="btn-text">Try Demo Contract</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card summary-card">
+        <div class="card-header">
+            <h2 class="card-title">Latest Analysis Summary</h2>
+            <div id="latestAnalysisBadge"></div>
+        </div>
+        <div class="card-body" id="latestSummaryBody">
+            <div class="empty-state" id="latestSummaryEmpty">
+                <div class="empty-icon-svg">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="3" y1="9" x2="21" y2="9"/>
+                        <line x1="9" y1="21" x2="9" y2="9"/>
+                    </svg>
+                </div>
+                <p class="empty-title">No analyses yet</p>
+                <p class="empty-desc">Upload a contract or load the demo sample to generate an automated review.</p>
+            </div>
+            <div class="latest-analysis-details" id="latestAnalysisDetails" style="display:none">
+                <div class="latest-meta-row">
+                    <div>
+                        <div class="latest-title" id="latestDocTitle">Document Name</div>
+                        <div class="latest-time" id="latestDocTime">Just now</div>
+                    </div>
+                    <a href="/results" class="btn btn-sm btn-outline" id="viewLatestBtn">View Full Report &rarr;</a>
+                </div>
+                <div class="stat-pills-grid" id="latestStatsGrid">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card recent-analyses-card">
+    <div class="card-header">
+        <h2 class="card-title">Recent Contract Analyses</h2>
+        <span class="text-muted" id="recentAnalysesCount">0 saved</span>
+    </div>
+    <div class="card-body">
+        <div class="empty-state" id="recentAnalysesEmpty">
+            <p class="empty-desc">Your reviewed contracts will appear here for instant reference.</p>
+        </div>
+        <div class="recent-table-wrapper" id="recentTableWrapper" style="display:none">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Document</th>
+                        <th>Type</th>
+                        <th>Analyzed</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="recentTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="disclaimer-banner">
+    <div class="disclaimer-content">
+        <svg class="disclaimer-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        <p><strong>Disclaimer:</strong> ClauseLens Trust is an automated informational tool designed to highlight contract clauses against user-defined policies. It does NOT provide legal advice, legal opinions, or guarantee risk immunity. Always consult a qualified attorney for legal counsel.</p>
+    </div>
+</div>
+
+<!-- Demo Contracts Selection Modal -->
+<div class="modal-backdrop" id="demoContractsModal" style="display:none">
+    <div class="modal-card modal-lg">
+        <div class="modal-header">
+            <div>
+                <h3 class="modal-title">Select a Demo Contract</h3>
+                <p class="modal-subtitle">Choose from curated test contracts (.pdf &amp; .docx) with diverse risk profiles</p>
+            </div>
+            <button type="button" class="modal-close-btn" id="closeDemoModalBtn">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="demo-cards-list" id="demoCardsList">
+                <div class="loading-state">
+                    <div class="spinner"></div>
+                    <p class="mt-2 text-muted">Loading available sample contracts...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/upload.js"></script>
+{% endblock %}

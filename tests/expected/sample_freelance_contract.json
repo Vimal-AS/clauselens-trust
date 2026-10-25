@@ -1,0 +1,61 @@
+{
+  "fixture_name": "sample_freelance_contract.pdf",
+  "file_type": "pdf",
+  "total_findings": 5,
+  "summary": {
+    "conflicts": 4,
+    "matches": 1,
+    "uncertain": 0,
+    "not_found": 0,
+    "high": 3,
+    "medium": 1,
+    "low": 1
+  },
+  "findings": [
+    {
+      "category": "payment",
+      "result_type": "conflict",
+      "severity": "high",
+      "policy_expected": "Payment within 30 days",
+      "condition_detected": "Payment within 60 calendar days of invoice",
+      "evidence_quote": "Fees and Payment Terms\nAll invoices submitted by Consultant shall be due and payment within sixty (60) days of invoice.\n3.",
+      "verification_status": "verified"
+    },
+    {
+      "category": "renewal",
+      "result_type": "conflict",
+      "severity": "high",
+      "policy_expected": "Auto-renewal not allowed; Max renewal term: 12 months; Min cancellation notice: 30 days",
+      "condition_detected": "Auto-renewal; 12-month renewal term; 90-day cancellation notice",
+      "evidence_quote": "Term and Renewal\nThis Agreement shall commence on the Effective Date and shall automatically renew for successive twelve (12)\nmonth terms unless 90 days notice of cancellation is provided in writing by either party prior to expiration.\n4.",
+      "verification_status": "verified"
+    },
+    {
+      "category": "liability",
+      "result_type": "conflict",
+      "severity": "high",
+      "policy_expected": "Unlimited liability not allowed; Liability cap required",
+      "condition_detected": "Unlimited liability clause detected",
+      "evidence_quote": "Limitation of Liability\nNotwithstanding anything to the contrary herein, Consultant's liability shall be unlimited for any and all claims,\nlosses, or damages arising out of or related to this Agreement.\n5.",
+      "verification_status": "verified"
+    },
+    {
+      "category": "termination",
+      "result_type": "match",
+      "severity": "low",
+      "policy_expected": "Min notice: 30 days; Flag one-sided termination",
+      "condition_detected": "Termination clause detected",
+      "evidence_quote": "Termination\nEither party may terminate this Agreement for convenience upon thirty (30) days prior written notice.\n6.",
+      "verification_status": "verified"
+    },
+    {
+      "category": "jurisdiction",
+      "result_type": "conflict",
+      "severity": "medium",
+      "policy_expected": "Preferred: India; Accepted: India",
+      "condition_detected": "Jurisdiction: Singapore",
+      "evidence_quote": "Governing Law and Jurisdiction\nThis Agreement shall be governed by and construed in accordance with the laws of Singapore, and the parties\nhereby submit to the exclusive jurisdiction of the courts of Singapore.",
+      "verification_status": "verified"
+    }
+  ]
+}

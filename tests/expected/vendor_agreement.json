@@ -1,0 +1,61 @@
+{
+  "fixture_name": "vendor_agreement.docx",
+  "file_type": "docx",
+  "total_findings": 5,
+  "summary": {
+    "conflicts": 3,
+    "matches": 1,
+    "uncertain": 0,
+    "not_found": 1,
+    "high": 1,
+    "medium": 2,
+    "low": 1
+  },
+  "findings": [
+    {
+      "category": "payment",
+      "result_type": "conflict",
+      "severity": "medium",
+      "policy_expected": "Payment within 30 days",
+      "condition_detected": "Payment within 45 calendar days of invoice",
+      "evidence_quote": "Buyer shall make payment within forty-five (45) days of delivery of invoice.",
+      "verification_status": "verified"
+    },
+    {
+      "category": "renewal",
+      "result_type": "not_found",
+      "severity": null,
+      "policy_expected": "Auto-renewal not allowed; Max renewal term: 12 months; Min cancellation notice: 30 days",
+      "condition_detected": "No matching clause found in the contract.",
+      "evidence_quote": "",
+      "verification_status": "verified"
+    },
+    {
+      "category": "liability",
+      "result_type": "conflict",
+      "severity": "high",
+      "policy_expected": "Unlimited liability not allowed; Liability cap required",
+      "condition_detected": "Unlimited liability clause detected",
+      "evidence_quote": "Vendor shall bear uncapped liability and indemnifies Buyer against all losses arising from breach.",
+      "verification_status": "verified"
+    },
+    {
+      "category": "termination",
+      "result_type": "match",
+      "severity": "low",
+      "policy_expected": "Min notice: 30 days; Flag one-sided termination",
+      "condition_detected": "60-day notice",
+      "evidence_quote": "This contract shall continue for an additional 24 month renewal period unless terminated with sixty (60) days notice.",
+      "verification_status": "verified"
+    },
+    {
+      "category": "jurisdiction",
+      "result_type": "conflict",
+      "severity": "medium",
+      "policy_expected": "Preferred: India; Accepted: India",
+      "condition_detected": "Jurisdiction: England",
+      "evidence_quote": "This agreement shall be governed by the laws of England, and the courts of London shall have exclusive jurisdiction.",
+      "verification_status": "verified"
+    }
+  ]
+}

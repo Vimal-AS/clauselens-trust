@@ -1,0 +1,61 @@
+{
+  "fixture_name": "clean_compliant_contract.pdf",
+  "file_type": "pdf",
+  "total_findings": 5,
+  "summary": {
+    "conflicts": 0,
+    "matches": 5,
+    "uncertain": 0,
+    "not_found": 0,
+    "high": 0,
+    "medium": 0,
+    "low": 5
+  },
+  "findings": [
+    {
+      "category": "payment",
+      "result_type": "match",
+      "severity": "low",
+      "policy_expected": "Payment within 30 days",
+      "condition_detected": "Payment within 15 calendar days of invoice",
+      "evidence_quote": "Invoicing and Payment\nClient agrees to remit payment within 15 calendar days of receipt of each valid invoice.\n3.",
+      "verification_status": "verified"
+    },
+    {
+      "category": "renewal",
+      "result_type": "match",
+      "severity": "low",
+      "policy_expected": "Auto-renewal not allowed; Max renewal term: 12 months; Min cancellation notice: 30 days",
+      "condition_detected": "No automatic renewal",
+      "evidence_quote": "Term\nThe term of this Agreement is twelve (12) months from the Effective Date, with no automatic renewal.\n4.",
+      "verification_status": "verified"
+    },
+    {
+      "category": "liability",
+      "result_type": "match",
+      "severity": "low",
+      "policy_expected": "Unlimited liability not allowed; Liability cap required",
+      "condition_detected": "Liability cap clause detected",
+      "evidence_quote": "Limitation of Liability\nThe total aggregate liability of Vendor arising under this Agreement shall not exceed the total fees paid by Client\nduring the preceding three months.\n5.",
+      "verification_status": "verified"
+    },
+    {
+      "category": "termination",
+      "result_type": "match",
+      "severity": "low",
+      "policy_expected": "Min notice: 30 days; Flag one-sided termination",
+      "condition_detected": "Termination clause detected",
+      "evidence_quote": "Termination\nEither party may terminate this Agreement with thirty (30) days prior written notice for convenience.\n6.",
+      "verification_status": "verified"
+    },
+    {
+      "category": "jurisdiction",
+      "result_type": "match",
+      "severity": "low",
+      "policy_expected": "Preferred: India; Accepted: India",
+      "condition_detected": "Jurisdiction: Maharashtra, India",
+      "evidence_quote": "Jurisdiction\nThis Agreement is governed by the laws of India, and the courts of Mumbai shall have exclusive jurisdiction.",
+      "verification_status": "verified"
+    }
+  ]
+}
