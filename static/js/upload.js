@@ -210,11 +210,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </div>
                 <div class="demo-card-actions" style="display:flex; gap:8px; align-items:center;">
-                    <a href="/api/contracts/demo/${d.id}/file" target="_blank" class="btn btn-sm btn-outline" style="text-decoration:none;" title="Open or download original contract file">
-                        Open File ↗
+                    <a href="/api/contracts/demo/${d.id}/file" target="_blank" class="btn btn-sm btn-outline" style="text-decoration:none;" title="Download original sample contract file">
+                        Download (${d.file_type.toUpperCase()}) ↗
                     </a>
                     <button type="button" class="btn btn-sm btn-primary select-demo-btn" data-id="${d.id}">
-                        Select &rarr;
+                        Analyse &amp; Open &rarr;
                     </button>
                 </div>
             `;
@@ -225,12 +225,12 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.addEventListener('click', () => {
                 const demoId = btn.getAttribute('data-id');
                 demoContractsModal.style.display = 'none';
-                loadSelectedDemo(demoId);
+                loadSelectedDemo(demoId, true);
             });
         });
     }
 
-    function loadSelectedDemo(demoId) {
+    function loadSelectedDemo(demoId, autoAnalyse = false) {
         hideError();
         analyseBtn.disabled = true;
         analysisStatusBox.style.display = 'block';
@@ -255,8 +255,14 @@ document.addEventListener('DOMContentLoaded', () => {
             uploadZoneIdle.style.display = 'none';
             uploadZoneSelected.style.display = 'flex';
             analyseBtn.disabled = false;
-            analysisStatusBox.style.display = 'none';
-            showToast(`Loaded sample contract: ${data.file.title || data.file.original_filename}`, 'info');
+            
+            if (autoAnalyse) {
+                // Immediately start contract analysis
+                runContractAnalysis();
+            } else {
+                analysisStatusBox.style.display = 'none';
+                showToast(`Loaded sample contract: ${data.file.title || data.file.original_filename}`, 'info');
+            }
         })
         .catch((err) => {
             analysisStatusBox.style.display = 'none';
@@ -264,13 +270,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Analyse Button
-    analyseBtn.addEventListener('click', () => {
+    function runContractAnalysis() {
         if (!currentUploadedFile) return;
 
         analyseBtn.disabled = true;
         analysisStatusBox.style.display = 'block';
-        statusStageText.textContent = 'Extracting text and locations...';
+        statusStageText.textContent = 'Extracting text and document locations...';
 
         const timer = setTimeout(() => {
             statusStageText.textContent = 'Checking contract clauses against your policies...';
@@ -307,6 +312,11 @@ document.addEventListener('DOMContentLoaded', () => {
             analyseBtn.disabled = false;
             showError(err.message);
         });
+    }
+
+    // Analyse Button
+    analyseBtn.addEventListener('click', () => {
+        runContractAnalysis();
     });
 
     // Recent Analyses & Latest Summary
