@@ -893,6 +893,23 @@ def detect_custom(sentences, config, policy_name):
 
 
 def _make_finding(category, result_type, policy_expected, condition_detected, evidence, explanation, impact, action, severity_override=None):
+    page_num = evidence.get('page')
+    para_num = evidence.get('paragraph')
+    para_ref = evidence.get('paragraph_reference')
+    if not para_ref and para_num:
+        para_ref = f"Paragraph {para_num}"
+
+    if not page_num and para_ref:
+        m = re.search(r'(?:page|image)\s*(\d+)', para_ref, re.IGNORECASE)
+        if m:
+            try:
+                page_num = int(m.group(1))
+            except ValueError:
+                pass
+
+    if evidence.get('text') and not para_ref:
+        para_ref = f"Paragraph {para_num or 1}"
+
     return {
         'category': category,
         'result_type': result_type,
@@ -901,9 +918,9 @@ def _make_finding(category, result_type, policy_expected, condition_detected, ev
         'policy_expected': policy_expected,
         'condition_detected': condition_detected,
         'evidence_quote': evidence['text'],
-        'page_number': evidence.get('page'),
-        'paragraph_reference': evidence.get('paragraph_reference') or (f"Paragraph {evidence.get('paragraph')}" if evidence.get('paragraph') else None),
-        'line_reference': f"line {evidence.get('line_ref')} on page {evidence.get('page')}" if evidence.get('line_ref') and evidence.get('page') else None,
+        'page_number': page_num,
+        'paragraph_reference': para_ref,
+        'line_reference': f"line {evidence.get('line_ref')} on page {page_num}" if evidence.get('line_ref') and page_num else None,
         'explanation': explanation,
         'potential_impact': impact,
         'suggested_action': action,

@@ -195,3 +195,43 @@ def test_settings_and_data_deletion(client):
     # Check analyses are empty
     list_res = client.get('/api/analyses')
     assert len(list_res.json['analyses']) == 0
+
+
+def test_evidence_page_and_paragraph_highlighting(client):
+    """Verify that findings for PDF, DOCX, and images include both page and paragraph references."""
+    # 1. PDF demo
+    demo_res = client.post('/api/contracts/demo')
+    assert demo_res.status_code == 200
+    pdf_file = demo_res.json['file']
+    analyse_pdf = client.post('/api/contracts/analyse', json=pdf_file)
+    assert analyse_pdf.status_code == 200
+    pdf_id = analyse_pdf.json['analysis_id']
+
+    pdf_detail = client.get(f'/api/analyses/{pdf_id}')
+    assert pdf_detail.status_code == 200
+    pdf_findings = [f for f in pdf_detail.json['findings'] if f.get('evidence_quote')]
+    assert len(pdf_findings) > 0
+    # Every finding with evidence in PDF should have page_number AND paragraph_reference
+    for f in pdf_findings:
+        assert f['page_number'] is not None
+        assert f['page_number'] >= 1
+        assert f['paragraph_reference'] is not None
+        assert 'Paragraph' in f['paragraph_reference']
+
+    # 2. DOCX demo
+    docx_demo = client.post('/api/contracts/demo', json={'demo_id': 'vendor_supply'})
+    assert docx_demo.status_code == 200
+    docx_file = docx_demo.json['file']
+    analyse_docx = client.post('/api/contracts/analyse', json=docx_file)
+    assert analyse_docx.status_code == 200
+    docx_id = analyse_docx.json['analysis_id']
+
+    docx_detail = client.get(f'/api/analyses/{docx_id}')
+    assert docx_detail.status_code == 200
+    docx_findings = [f for f in docx_detail.json['findings'] if f.get('evidence_quote')]
+    assert len(docx_findings) > 0
+    # Every finding with evidence in DOCX should have paragraph_reference
+    for f in docx_findings:
+        assert f['paragraph_reference'] is not None
+        assert 'Paragraph' in f['paragraph_reference'] or 'Table' in f['paragraph_reference']
+

@@ -257,14 +257,64 @@ document.addEventListener('DOMContentLoaded', () => {
             card.className = `finding-card ${sevClass}`;
 
             const isImageContract = currentAnalysisData && currentAnalysisData.analysis && currentAnalysisData.analysis.file_type === 'images';
-            const locationStr = isImageContract
-                ? (f.paragraph_reference || (f.page_number ? `Image ${f.page_number}` : 'Location: not available'))
-                : (f.line_reference 
-                    ? f.line_reference 
-                    : (f.page_number ? `Page ${f.page_number}` : (f.paragraph_reference ? f.paragraph_reference : 'Location: not available')));
+            let pageNum = f.page_number;
+            let paraRef = f.paragraph_reference;
 
-            const hasPage = (!!f.page_number && currentAnalysisData && currentAnalysisData.analysis.file_type === 'pdf') ||
-                            (isImageContract && !!f.page_number);
+            // Intelligent fallbacks if legacy records don't have separated fields
+            if (!pageNum && f.line_reference) {
+                const matchPage = f.line_reference.match(/page\s*(\d+)/i);
+                if (matchPage) pageNum = parseInt(matchPage[1], 10);
+            }
+            if (!pageNum && paraRef) {
+                const matchPage = paraRef.match(/(?:page|image)\s*(\d+)/i);
+                if (matchPage) pageNum = parseInt(matchPage[1], 10);
+            }
+            if (!paraRef && f.line_reference) {
+                const matchLine = f.line_reference.match(/line\s*(\d+)/i);
+                if (matchLine) {
+                    const lineNum = parseInt(matchLine[1], 10);
+                    const approxPara = Math.max(1, Math.ceil(lineNum / 4));
+                    paraRef = `Paragraph ${approxPara}`;
+                }
+            }
+
+            // Highlighted location badges
+            let pageBadgeHtml = '';
+            let paraBadgeHtml = '';
+            let lineBadgeHtml = '';
+
+            if (pageNum) {
+                const pageLabel = isImageContract ? `Image ${pageNum}` : `Page ${pageNum}`;
+                pageBadgeHtml = `
+                    <span class="location-badge location-badge-page" title="Contract Page Number">
+                        <svg class="loc-badge-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                        <span>${pageLabel}</span>
+                    </span>`;
+            }
+
+            if (paraRef && paraRef !== 'None') {
+                paraBadgeHtml = `
+                    <span class="location-badge location-badge-para" title="Contract Paragraph Number">
+                        <svg class="loc-badge-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="18" y2="18"/></svg>
+                        <span>${escapeHtml(paraRef)}</span>
+                    </span>`;
+            }
+
+            if (f.line_reference && !paraRef) {
+                const matchLine = f.line_reference.match(/line\s*(\d+)/i);
+                const lineLabel = matchLine ? `Line ${matchLine[1]}` : f.line_reference;
+                lineBadgeHtml = `
+                    <span class="location-badge location-badge-line" title="Exact Line">
+                        <span>${escapeHtml(lineLabel)}</span>
+                    </span>`;
+            }
+
+            const locationBadgesHtml = (pageBadgeHtml || paraBadgeHtml || lineBadgeHtml)
+                ? `<div class="evidence-location-badges">${pageBadgeHtml}${paraBadgeHtml}${lineBadgeHtml}</div>`
+                : `<span class="evidence-location">Location: not available</span>`;
+
+            const hasPage = (!!pageNum && currentAnalysisData && currentAnalysisData.analysis.file_type === 'pdf') ||
+                            (isImageContract && !!pageNum);
 
             card.innerHTML = `
                 <div class="finding-header" data-id="${f.id}">
@@ -272,7 +322,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span class="risk-id-tag">${escapeHtml(f.risk_id)}</span>
                         ${f.severity ? `<span class="badge-pill badge-${f.severity}">${f.severity.toUpperCase()}</span>` : ''}
                         <span class="badge-pill badge-${f.result_type}">${f.result_type.replace('_', ' ').toUpperCase()}</span>
-                        <span class="badge-pill badge-${f.verification_status}">${f.verification_status.replace(/_/g, ' ')}</span>
+                        ${pageNum ? `<span class="header-loc-pill header-loc-page" title="Page ${pageNum}">📄 P.${pageNum}</span>` : ''}
+                        ${paraRef && paraRef !== 'None' ? `<span class="header-loc-pill header-loc-para" title="${escapeHtml(paraRef)}">📑 ${escapeHtml(paraRef.replace(/Paragraph\s*/i, 'Para '))}</span>` : ''}
                         <span class="finding-title-text">${escapeHtml(f.category.toUpperCase())}${f.clause_title ? ` — ${escapeHtml(f.clause_title)}` : ''}</span>
                     </div>
                     <div class="finding-header-right">
@@ -295,10 +346,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     ${f.evidence_quote ? `
                         <div class="evidence-quote-box">
                             <div class="evidence-header">
-                                <span class="evidence-label">Exact Contract Evidence:</span>
-                                <span class="evidence-location">${escapeHtml(locationStr)}</span>
+                                <div class="evidence-header-title-wrap">
+                                    <span class="evidence-label">Exact Contract Evidence:</span>
+                                </div>
+                                <div class="evidence-header-badges-wrap">
+                                    ${locationBadgesHtml}
+                                </div>
                             </div>
-                            <div class="evidence-text">"${escapeHtml(f.evidence_quote)}"</div>
+                            <div class="evidence-text">
+                                <mark class="evidence-highlight-mark">"${escapeHtml(f.evidence_quote)}"</mark>
+                            </div>
                         </div>
                     ` : `
                         <div class="evidence-quote-box">
@@ -335,7 +392,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <button type="button" class="btn btn-sm btn-outline save-review-btn" data-id="${f.id}">Save Note</button>
                         </div>
                         <div>
-                            ${hasPage ? `<button type="button" class="btn btn-sm btn-ghost view-page-btn" data-page="${f.page_number}" data-finding="${f.id}"><svg class="btn-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> ${isImageContract ? 'View Source Image' : 'View Page Highlight'}</button>` : ''}
+                            ${hasPage ? `<button type="button" class="btn btn-sm btn-ghost view-page-btn" data-page="${pageNum}" data-finding="${f.id}"><svg class="btn-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> ${isImageContract ? `View Image ${pageNum}` : `View Page ${pageNum} Highlight`}</button>` : ''}
                         </div>
                     </div>
                 </div>

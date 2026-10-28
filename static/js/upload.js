@@ -121,9 +121,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             const file = files[0];
-            const maxSize = 10 * 1024 * 1024;
+            const maxSize = 50 * 1024 * 1024;
             if (file.size > maxSize) {
-                showError('File exceeds 10 MB limit. Please select a smaller contract.');
+                showError('File exceeds 50 MB limit. Please select a smaller contract.');
                 return;
             }
             uploadFileToServer(file);
@@ -137,18 +137,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            const maxFileSize = 10 * 1024 * 1024;
+            const maxFileSize = 50 * 1024 * 1024;
             for (const img of files) {
                 if (img.size > maxFileSize) {
-                    showError(`Image "${img.name}" exceeds 10 MB limit (${(img.size / (1024 * 1024)).toFixed(1)} MB).`);
+                    showError(`Image "${img.name}" exceeds 50 MB limit (${(img.size / (1024 * 1024)).toFixed(1)} MB).`);
                     return;
                 }
             }
 
-            const maxBatchSize = 50 * 1024 * 1024;
+            const maxBatchSize = 100 * 1024 * 1024;
             const totalSize = files.reduce((acc, f) => acc + f.size, 0);
             if (totalSize > maxBatchSize) {
-                showError(`Total image batch exceeds 50 MB limit (${(totalSize / (1024 * 1024)).toFixed(1)} MB).`);
+                showError(`Total image batch exceeds 100 MB limit (${(totalSize / (1024 * 1024)).toFixed(1)} MB).`);
                 return;
             }
 

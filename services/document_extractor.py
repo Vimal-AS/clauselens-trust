@@ -55,9 +55,11 @@ def _extract_pdf(file_path):
         page_lines = []
         line_idx = 0
         
+        block_idx = 0
         for block in page_dict.get("blocks", []):
             if block.get("type") != 0:  # text block only
                 continue
+            block_idx += 1
             for line in block.get("lines", []):
                 spans = line.get("spans", [])
                 line_text = "".join(span.get("text", "") for span in spans).strip()
@@ -70,6 +72,7 @@ def _extract_pdf(file_path):
                     'text': line_text,
                     'bbox': list(bbox) if bbox else None,
                     'line_idx': line_idx,
+                    'para_num': block_idx,
                     'page_num': page_num + 1,
                     'char_offset': global_char_offset + sum(len(t) + 1 for t in page_text_parts),
                 })
@@ -129,6 +132,7 @@ def _extract_docx(file_path):
     paragraphs = []
     all_text_parts = []
     para_num = 0
+    cum_chars = 0
     
     # Body paragraphs
     for para in doc.paragraphs:
@@ -136,13 +140,16 @@ def _extract_docx(file_path):
         if not text:
             continue
         para_num += 1
+        page_num = max(1, (cum_chars // 2200) + 1)
         paragraphs.append({
             'para_num': para_num,
+            'page_num': page_num,
             'text': text,
             'source': f'Paragraph {para_num}',
             'style': para.style.name if para.style else None,
         })
         all_text_parts.append(text)
+        cum_chars += len(text) + 1
     
     # Table cells
     table_num = 0
@@ -154,13 +161,16 @@ def _extract_docx(file_path):
                 if not text:
                     continue
                 para_num += 1
+                page_num = max(1, (cum_chars // 2200) + 1)
                 source = f'Table {table_num}, row {row_idx + 1}, cell {cell_idx + 1}'
                 paragraphs.append({
                     'para_num': para_num,
+                    'page_num': page_num,
                     'text': text,
                     'source': source,
                 })
                 all_text_parts.append(text)
+                cum_chars += len(text) + 1
     
     # Headers and footers
     for section in doc.sections:
@@ -268,19 +278,20 @@ def _split_sentences(full_text, pages, file_type, paragraphs=None):
                 if idx == -1:
                     idx = char_pos
                 
-                line_ref = _find_line_for_text(raw, page_info.get('lines', []))
+                line_ref, para_num = _find_line_and_para_for_text(raw, page_info.get('lines', []))
                 clause_title = _extract_clause_title(raw, page_text, idx)
                 if clause_title:
                     current_clause_title = clause_title
                 
+                para_label = f"Paragraph {para_num}" if para_num else None
                 sentences.append({
                     'text': raw,
                     'page': page_num,
-                    'paragraph': None,
-                    'paragraph_reference': None,
+                    'paragraph': para_num,
+                    'paragraph_reference': para_label,
                     'line_ref': line_ref,
                     'clause_title': clause_title or current_clause_title,
-                    'source': f'Page {page_num}',
+                    'source': f'Page {page_num}' + (f', {para_label}' if para_label else ''),
                 })
                 
                 char_pos = idx + len(raw)
@@ -317,19 +328,42 @@ def _split_sentences(full_text, pages, file_type, paragraphs=None):
 
 def _find_line_for_text(text, lines):
     """Find the line index for a piece of text within page lines."""
+    line_idx, _ = _find_line_and_para_for_text(text, lines)
+    return line_idx
+
+
+def _find_line_and_para_for_text(text, lines):
+    """Find the line index and paragraph number for a piece of text within page lines."""
     if not lines:
-        return None
+        return None, 1
     
-    text_lower = text.lower()[:60]
+    text_clean = text.strip().lower()
+    text_prefix = text_clean[:50]
+    
+    # 1. Prefix match
     for line in lines:
-        if line['text'].lower().startswith(text_lower[:30]) or text_lower.startswith(line['text'].lower()[:30]):
-            return line['line_idx'] + 1
+        lt = line['text'].strip().lower()
+        if lt.startswith(text_prefix[:25]) or text_prefix.startswith(lt[:25]):
+            return line['line_idx'] + 1, line.get('para_num', 1)
     
+    # 2. Substring match
     for line in lines:
-        if text[:20].lower() in line['text'].lower():
-            return line['line_idx'] + 1
+        lt = line['text'].strip().lower()
+        if len(lt) >= 8 and (lt in text_clean or text_clean in lt):
+            return line['line_idx'] + 1, line.get('para_num', 1)
+        if len(text_prefix) >= 10 and text_prefix[:20] in lt:
+            return line['line_idx'] + 1, line.get('para_num', 1)
     
-    return None
+    # 3. Word match fallback
+    words = [w for w in text_clean.split() if len(w) > 4][:5]
+    if words:
+        for line in lines:
+            lt = line['text'].strip().lower()
+            if any(w in lt for w in words):
+                return line['line_idx'] + 1, line.get('para_num', 1)
+
+    # 4. Default to first line's paragraph
+    return lines[0]['line_idx'] + 1, lines[0].get('para_num', 1)
 
 
 def _extract_clause_title(sentence_text, full_context, position):
@@ -479,37 +513,44 @@ def _check_image_quality(img, filename, img_num):
 def _split_image_sentences(page_text, img_num, orig_name, img_lines):
     """Split extracted image text into sentences while tracking image location metadata."""
     sentences = []
-    raw_sentences = _split_into_sentences_raw(page_text)
+    blocks = [b.strip() for b in page_text.split('\n\n') if b.strip()]
+    if not blocks:
+        blocks = [page_text]
+
     current_clause_title = None
     char_pos = 0
 
-    for raw in raw_sentences:
-        raw = raw.strip()
-        if not raw:
-            continue
+    for block_idx, block in enumerate(blocks):
+        para_num = block_idx + 1
+        raw_sentences = _split_into_sentences_raw(block)
+        for raw in raw_sentences:
+            raw = raw.strip()
+            if not raw:
+                continue
 
-        idx = page_text.find(raw, char_pos)
-        if idx == -1:
-            idx = char_pos
+            idx = page_text.find(raw, char_pos)
+            if idx == -1:
+                idx = char_pos
 
-        line_ref = _find_line_for_text(raw, img_lines)
-        clause_title = _extract_clause_title(raw, page_text, idx)
-        if clause_title:
-            current_clause_title = clause_title
+            line_ref = _find_line_for_text(raw, img_lines)
+            clause_title = _extract_clause_title(raw, page_text, idx)
+            if clause_title:
+                current_clause_title = clause_title
 
-        source_label = f"Image {img_num} ({orig_name})"
-        sentences.append({
-            'text': raw,
-            'page': img_num,
-            'paragraph': None,
-            'paragraph_reference': source_label,
-            'line_ref': line_ref,
-            'clause_title': clause_title or current_clause_title,
-            'source': source_label,
-            'image_filename': orig_name,
-            'image_number': img_num,
-        })
-        char_pos = idx + len(raw)
+            para_label = f"Paragraph {para_num}"
+            source_label = f"Image {img_num} ({orig_name}), {para_label}"
+            sentences.append({
+                'text': raw,
+                'page': img_num,
+                'paragraph': para_num,
+                'paragraph_reference': source_label,
+                'line_ref': line_ref,
+                'clause_title': clause_title or current_clause_title,
+                'source': source_label,
+                'image_filename': orig_name,
+                'image_number': img_num,
+            })
+            char_pos = idx + len(raw)
 
     return sentences
 

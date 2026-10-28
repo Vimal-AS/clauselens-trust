@@ -9,7 +9,7 @@ from database import init_db, seed_default_policies, seed_default_settings
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-key-change-me')
-app.config['MAX_CONTENT_LENGTH'] = int(os.environ.get('UPLOAD_MAX_SIZE_MB', 10)) * 1024 * 1024
+app.config['MAX_CONTENT_LENGTH'] = int(os.environ.get('UPLOAD_MAX_SIZE_MB', 50)) * 1024 * 1024
 app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
 app.config['REPORTS_FOLDER'] = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'reports')
 

@@ -12,8 +12,8 @@ PDF_MAGIC = b'%PDF'
 DOCX_MAGIC = b'PK\x03\x04'
 MAX_ZIP_RATIO = 100  # zip bomb guard
 MAX_IMAGE_COUNT = 20
-MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024  # 10 MB per image
-MAX_BATCH_SIZE_BYTES = 50 * 1024 * 1024  # 50 MB total
+MAX_IMAGE_SIZE_BYTES = int(os.environ.get('UPLOAD_MAX_SIZE_MB', 50)) * 1024 * 1024  # Up to 50 MB per image
+MAX_BATCH_SIZE_BYTES = MAX_IMAGE_SIZE_BYTES * 2  # Batch image limit
 
 
 def _validate_image_file(file_storage):
@@ -32,7 +32,8 @@ def _validate_image_file(file_storage):
     file_storage.seek(0)
 
     if size > MAX_IMAGE_SIZE_BYTES:
-        return False, f"Image '{filename}' exceeds the 10 MB size limit ({size / (1024*1024):.1f} MB).", None, size
+        max_mb = MAX_IMAGE_SIZE_BYTES // (1024 * 1024)
+        return False, f"Image '{filename}' exceeds the {max_mb} MB size limit ({size / (1024*1024):.1f} MB).", None, size
 
     if ext in ('jpg', 'jpeg'):
         if header[:3] != b'\xff\xd8\xff':
@@ -195,7 +196,7 @@ def upload_contract():
     file_size = file.tell()
     file.seek(0)
     
-    max_size = current_app.config.get('MAX_CONTENT_LENGTH', 10 * 1024 * 1024)
+    max_size = current_app.config.get('MAX_CONTENT_LENGTH', 50 * 1024 * 1024)
     if file_size > max_size:
         return jsonify({'error': f'File too large. Maximum size is {max_size // (1024*1024)} MB.'}), 400
     

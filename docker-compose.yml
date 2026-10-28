@@ -12,4 +12,4 @@ services:
     environment:
       - FLASK_ENV=production
       - SECRET_KEY=clauselens-production-secret-key-change-me
-      - UPLOAD_MAX_SIZE_MB=10
+      - UPLOAD_MAX_SIZE_MB=50

@@ -211,18 +211,18 @@ def generate_pdf_report(analysis_id, contract_name, timestamp, findings, policie
             elements.append(Paragraph(f'"{_escape(quote)}"', quote_style))
             
         locs = []
-        para_ref = str(_get(f, 'paragraph_reference', ''))
-        if para_ref.startswith('Image '):
+        para_ref = str(_get(f, 'paragraph_reference', '') or '').strip()
+        page_val = _get(f, 'page_number')
+        line_val = str(_get(f, 'line_reference', '') or '').strip()
+
+        if page_val:
+            locs.append(f"Page {page_val}")
+        if para_ref and para_ref != 'None':
             locs.append(_escape(para_ref))
-        else:
-            if _get(f, 'page_number'):
-                locs.append(f"Page {_get(f, 'page_number')}")
-            if _get(f, 'line_reference'):
-                locs.append(_escape(_get(f, 'line_reference')))
-            elif _get(f, 'paragraph_reference'):
-                locs.append(_escape(_get(f, 'paragraph_reference')))
-            else:
-                locs.append("Location: not available")
+        if line_val and line_val != 'None':
+            locs.append(_escape(line_val))
+        if not locs:
+            locs.append("Location: not available")
             
         elements.append(Paragraph(f'<b>Location:</b> {", ".join(locs)} | <b>Verification:</b> {_escape((_get(f, "verification_status") or "N/A").replace("_", " ").title())}', small_style))
         elements.append(Paragraph(f'<b>Explanation:</b> {_escape(_get(f, "explanation"))}', body_style))
