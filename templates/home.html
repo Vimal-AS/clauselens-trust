@@ -3,7 +3,7 @@
 <div class="page-header">
     <div class="header-titles">
         <h1 class="page-title">Contract Risk Analysis</h1>
-        <p class="page-subtitle">Evidence-based contract policy inspection with verbatim clause verification.</p>
+        <p class="page-subtitle">Inspect contract risks and compare clauses against your policies.</p>
     </div>
 </div>
 
@@ -25,7 +25,7 @@
                     </div>
                     <div class="upload-instructions">
                         <p class="primary-text">Drag & drop your contract here, or <button type="button" class="btn-link" id="browseBtn">browse files</button></p>
-                        <p class="secondary-text">Supported formats: PDF (.pdf), Word (.docx), Images (.jpg, .jpeg, .png) • Max 10 MB per file</p>
+                        <p class="secondary-text">PDF, DOCX, or Images (JPG, PNG) • Up to 10 MB</p>
                     </div>
                 </div>
                 <input type="file" id="fileInput" accept=".pdf,.docx,.jpg,.jpeg,.png,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword,image/jpeg,image/png" aria-label="Upload contract file (PDF, DOCX, or Images)" multiple style="display:none">
@@ -60,7 +60,7 @@
                     <div class="spinner"></div>
                     <div class="status-labels">
                         <div class="status-stage" id="statusStageText">Extracting text...</div>
-                        <div class="status-subtext">Verifying quotes against exact source locations</div>
+                        <div class="status-subtext">Extracting and verifying clauses...</div>
                     </div>
                 </div>
             </div>
@@ -93,7 +93,7 @@
                     </svg>
                 </div>
                 <p class="empty-title">No analyses yet</p>
-                <p class="empty-desc">Upload a contract or load the demo sample to generate an automated review.</p>
+                <p class="empty-desc">Upload a contract or pick a sample to start.</p>
             </div>
             <div class="latest-analysis-details" id="latestAnalysisDetails" style="display:none">
                 <div class="latest-meta-row">
@@ -118,7 +118,7 @@
     </div>
     <div class="card-body">
         <div class="empty-state" id="recentAnalysesEmpty">
-            <p class="empty-desc">Your reviewed contracts will appear here for instant reference.</p>
+            <p class="empty-desc">Your reviewed contracts will appear here.</p>
         </div>
         <div class="recent-table-wrapper" id="recentTableWrapper" style="display:none">
             <table class="data-table">
@@ -140,7 +140,7 @@
 <div class="disclaimer-banner">
     <div class="disclaimer-content">
         <svg class="disclaimer-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-        <p><strong>Disclaimer:</strong> ClauseLens Trust is an automated informational tool designed to highlight contract clauses against user-defined policies. It does NOT provide legal advice, legal opinions, or guarantee risk immunity. Always consult a qualified attorney for legal counsel.</p>
+        <p><strong>Disclaimer:</strong> ClauseLens Trust is an automated review aid, not formal legal advice. Always consult qualified legal counsel.</p>
     </div>
 </div>
 
@@ -150,7 +150,7 @@
         <div class="modal-header">
             <div>
                 <h3 class="modal-title">Select a Demo Contract</h3>
-                <p class="modal-subtitle">Choose from curated test contracts (.pdf &amp; .docx) with diverse risk profiles</p>
+                <p class="modal-subtitle">Select a sample contract to review</p>
             </div>
             <button type="button" class="modal-close-btn" id="closeDemoModalBtn">&times;</button>
         </div>
@@ -158,7 +158,7 @@
             <div class="demo-cards-list" id="demoCardsList">
                 <div class="loading-state">
                     <div class="spinner"></div>
-                    <p class="mt-2 text-muted">Loading available sample contracts...</p>
+                    <p class="mt-2 text-muted">Loading sample contracts...</p>
                 </div>
             </div>
         </div>

@@ -3,7 +3,7 @@
 <div class="page-header">
     <div class="header-titles">
         <h1 class="page-title">Application Settings</h1>
-        <p class="page-subtitle">Configure interface appearance, language preferences, and data privacy controls.</p>
+        <p class="page-subtitle">Manage appearance, language, and data privacy.</p>
     </div>
     <div class="header-actions">
         <button type="button" class="btn btn-outline" id="restoreDefaultSettingsBtn">Restore Defaults</button>
@@ -20,7 +20,7 @@
         <div class="card-body">
             <div class="setting-item">
                 <label class="setting-label">Interface Theme</label>
-                <p class="setting-hint">Applies instantly across all pages and persists across sessions.</p>
+                <p class="setting-hint">Persists across your browser sessions.</p>
                 <div class="theme-radios-row">
                     <label class="theme-radio-card" data-theme-val="light">
                         <input type="radio" name="themeSelection" value="light" checked>
@@ -62,7 +62,7 @@
         <div class="card-body">
             <div class="setting-item">
                 <label for="languageSelect" class="setting-label">Explanation Language</label>
-                <p class="setting-hint">Select the language used for plain-English and summary explanations (uses static pre-written templates).</p>
+                <p class="setting-hint">Language for plain-language risk explanations.</p>
                 <select id="languageSelect" class="form-control">
                     <option value="en" selected>English</option>
                     <option value="ta">Tamil (எளிய தமிழ் விளக்கங்கள்)</option>
@@ -74,7 +74,7 @@
                     <span class="ai-indicator-dot"></span>
                     <span id="aiStatusText">AI explanations not configured</span>
                 </div>
-                <p class="setting-hint">ClauseLens Trust operates 100% deterministically by default. AI explanations require setting <code>LLM_API_KEY</code> in <code>.env</code>.</p>
+                <p class="setting-hint">Operates deterministically by default. Add <code>LLM_API_KEY</code> in <code>.env</code> for AI summaries.</p>
             </div>
         </div>
     </div>
@@ -116,14 +116,14 @@
             <div class="setting-item">
                 <label class="checkbox-label">
                     <input type="checkbox" id="keepUploadedFilesToggle">
-                    <span>Retain uploaded contracts on disk for PDF page preview (uncheck to automatically delete files immediately after extraction)</span>
+                    <span>Retain uploads for PDF page preview (uncheck to delete immediately after extraction)</span>
                 </label>
             </div>
             
             <div class="danger-box">
                 <div class="danger-text">
                     <strong>Delete All Analysis Data</strong>
-                    <p class="danger-desc">Permanently purges all SQLite database records (analyses, findings, review notes) and removes temporary report & upload files.</p>
+                    <p class="danger-desc">Permanently deletes all analyses, findings, notes, and uploaded files.</p>
                 </div>
                 <button type="button" class="btn btn-danger" id="deleteAllDataBtn">
                     <svg class="btn-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>

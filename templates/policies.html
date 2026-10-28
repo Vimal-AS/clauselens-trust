@@ -3,7 +3,7 @@
 <div class="page-header">
     <div class="header-titles">
         <h1 class="page-title">Policy Configuration</h1>
-        <p class="page-subtitle">Configure your personal contract review rules, thresholds, and risk criteria.</p>
+        <p class="page-subtitle">Set your review rules, thresholds, and risk criteria.</p>
     </div>
     <div class="header-actions">
         <button type="button" class="btn btn-outline" id="restoreDefaultsBtn">
@@ -20,7 +20,7 @@
 <div class="unsaved-warning-bar" id="unsavedWarningBar" style="display:none">
     <div class="warning-content">
         <svg class="alert-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        <span>You have unsaved policy changes. Remember to click "Save Policies" to persist your settings.</span>
+        <span>You have unsaved changes. Click "Save Policies" to save them.</span>
     </div>
 </div>
 
@@ -38,7 +38,7 @@
                 </div>
                 <div>
                     <h2 class="card-title">Payment Terms</h2>
-                    <p class="policy-desc">Flag payment schedules and invoice due dates exceeding your acceptable threshold.</p>
+                    <p class="policy-desc">Flag payment terms and due dates exceeding your threshold.</p>
                 </div>
             </div>
             <label class="toggle-switch">
@@ -53,7 +53,7 @@
                     <input type="number" id="policy_payment_max_days" class="form-control" min="1" max="365" value="30">
                     <span class="input-affix">Days</span>
                 </div>
-                <span class="form-hint">E.g., 30 days flags "Net 45", "60 days", or longer periods as policy conflicts.</span>
+                <span class="form-hint">E.g. 30 days flags Net 45 or 60 days as conflicts.</span>
             </div>
         </div>
     </div>
@@ -69,7 +69,7 @@
                 </div>
                 <div>
                     <h2 class="card-title">Renewal Terms</h2>
-                    <p class="policy-desc">Control automatic renewals, successive terms, and minimum cancellation notice windows.</p>
+                    <p class="policy-desc">Control automatic renewals and cancellation notice windows.</p>
                 </div>
             </div>
             <label class="toggle-switch">
@@ -114,7 +114,7 @@
                 </div>
                 <div>
                     <h2 class="card-title">Liability & Indemnity</h2>
-                    <p class="policy-desc">Guard against uncapped liability, unlimited damages, and broad indemnification exposures.</p>
+                    <p class="policy-desc">Flag uncapped liability, unlimited damages, or missing caps.</p>
                 </div>
             </div>
             <label class="toggle-switch">
@@ -149,7 +149,7 @@
                 </div>
                 <div>
                     <h2 class="card-title">Termination Terms</h2>
-                    <p class="policy-desc">Flag unreasonably short notice periods and one-sided termination for convenience.</p>
+                    <p class="policy-desc">Flag short notice periods and one-sided termination rights.</p>
                 </div>
             </div>
             <label class="toggle-switch">
@@ -168,7 +168,7 @@
             <div class="form-check-group">
                 <label class="checkbox-label">
                     <input type="checkbox" id="policy_termination_flag_onesided" checked>
-                    <span>Flag one-sided termination for convenience (client-only right)</span>
+                    <span>Flag one-sided termination rights</span>
                 </label>
             </div>
         </div>
@@ -186,7 +186,7 @@
                 </div>
                 <div>
                     <h2 class="card-title">Governing Law & Jurisdiction</h2>
-                    <p class="policy-desc">Restrict dispute resolution, governing law, and legal venues to accepted locations.</p>
+                    <p class="policy-desc">Restrict governing law and dispute venues to accepted locations.</p>
                 </div>
             </div>
             <label class="toggle-switch">
@@ -202,7 +202,7 @@
             <div class="form-group">
                 <label for="policy_jurisdiction_accepted" class="form-label">Accepted Jurisdictions (comma-separated)</label>
                 <input type="text" id="policy_jurisdiction_accepted" class="form-control" value="India, Tamil Nadu, Karnataka, Maharashtra">
-                <span class="form-hint">Contracts specifying venues outside this whitelist will trigger a policy conflict.</span>
+                <span class="form-hint">Venues outside this list will trigger a conflict.</span>
             </div>
         </div>
     </div>
@@ -213,7 +213,7 @@
     <div class="section-header-row">
         <div>
             <h2 class="section-title">Custom Keyword Policies</h2>
-            <p class="section-subtitle">Define deterministic rules checking for required or restricted phrasing.</p>
+            <p class="section-subtitle">Define rules checking for required or restricted keywords.</p>
         </div>
         <button type="button" class="btn btn-secondary btn-sm" id="openAddCustomModalBtn">
             <svg class="btn-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -223,7 +223,7 @@
 
     <div class="custom-policies-list" id="customPoliciesList">
         <div class="empty-state" id="noCustomPolicies">
-            <p class="empty-desc">No custom rules defined. Click "Add Custom Rule" to create one.</p>
+            <p class="empty-desc">No custom rules yet. Click "Add Custom Rule" to create one.</p>
         </div>
     </div>
 </div>
