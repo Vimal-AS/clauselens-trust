@@ -67,13 +67,13 @@ document.addEventListener('DOMContentLoaded', () => {
     uploadZone.addEventListener('drop', (e) => {
         const files = e.dataTransfer.files;
         if (files && files.length > 0) {
-            handleFileSelected(files[0]);
+            handleFilesSelected(files);
         }
     });
 
     fileInput.addEventListener('change', () => {
         if (fileInput.files && fileInput.files.length > 0) {
-            handleFileSelected(fileInput.files[0]);
+            handleFilesSelected(fileInput.files);
         }
     });
 
@@ -96,24 +96,109 @@ document.addEventListener('DOMContentLoaded', () => {
         hideError();
     }
 
-    function handleFileSelected(file) {
+    function handleFilesSelected(fileList) {
         hideError();
-        
-        // Client-side extension validation
-        const ext = file.name.split('.').pop().toLowerCase();
-        if (ext !== 'pdf' && ext !== 'docx') {
-            showError('Invalid file type. Please upload a PDF (.pdf) or Word document (.docx).');
+        const files = Array.from(fileList);
+        if (files.length === 0) return;
+
+        const imgExts = ['jpg', 'jpeg', 'png'];
+        const docExts = ['pdf', 'docx'];
+
+        // Determine if all are images, single document, or mixed
+        const allImages = files.every(f => {
+            const ext = f.name.split('.').pop().toLowerCase();
+            return imgExts.includes(ext);
+        });
+
+        const allDocs = files.every(f => {
+            const ext = f.name.split('.').pop().toLowerCase();
+            return docExts.includes(ext);
+        });
+
+        if (allDocs) {
+            if (files.length > 1) {
+                showError('Please upload one PDF or DOCX contract document at a time (or multiple images).');
+                return;
+            }
+            const file = files[0];
+            const maxSize = 10 * 1024 * 1024;
+            if (file.size > maxSize) {
+                showError('File exceeds 10 MB limit. Please select a smaller contract.');
+                return;
+            }
+            uploadFileToServer(file);
             return;
         }
 
-        // 10 MB limit check
-        const maxSize = 10 * 1024 * 1024;
-        if (file.size > maxSize) {
-            showError('File exceeds 10 MB limit. Please select a smaller contract.');
+        if (allImages) {
+            const maxImageCount = 20;
+            if (files.length > maxImageCount) {
+                showError(`Maximum of ${maxImageCount} images allowed per upload. You selected ${files.length} images.`);
+                return;
+            }
+
+            const maxFileSize = 10 * 1024 * 1024;
+            for (const img of files) {
+                if (img.size > maxFileSize) {
+                    showError(`Image "${img.name}" exceeds 10 MB limit (${(img.size / (1024 * 1024)).toFixed(1)} MB).`);
+                    return;
+                }
+            }
+
+            const maxBatchSize = 50 * 1024 * 1024;
+            const totalSize = files.reduce((acc, f) => acc + f.size, 0);
+            if (totalSize > maxBatchSize) {
+                showError(`Total image batch exceeds 50 MB limit (${(totalSize / (1024 * 1024)).toFixed(1)} MB).`);
+                return;
+            }
+
+            uploadImagesToServer(files);
             return;
         }
 
-        uploadFileToServer(file);
+        // Mixed or unsupported extensions
+        showError('Unsupported file type or mixed formats. Please upload either a single contract document (.pdf, .docx) or multiple contract page images (.jpg, .jpeg, .png).');
+    }
+
+    function uploadImagesToServer(files) {
+        const formData = new FormData();
+        files.forEach(f => {
+            formData.append('images', f, f.name);
+        });
+
+        analyseBtn.disabled = true;
+        analysisStatusBox.style.display = 'block';
+        statusStageText.textContent = `Uploading and validating ${files.length} images...`;
+
+        fetch('/api/contracts/upload-images', {
+            method: 'POST',
+            body: formData
+        })
+        .then(async (res) => {
+            const data = await res.json();
+            if (!res.ok) {
+                throw new Error(data.error || 'Upload failed.');
+            }
+            return data;
+        })
+        .then((data) => {
+            currentUploadedFile = data.file;
+            selectedFileName.textContent = currentUploadedFile.original_filename;
+            const sizeMb = (currentUploadedFile.file_size / (1024 * 1024)).toFixed(2);
+            selectedFileMeta.textContent = `IMAGES • ${currentUploadedFile.total_images || files.length} Images • ${sizeMb} MB`;
+            fileIconBadge.className = 'file-icon file-icon-docx';
+
+            uploadZoneIdle.style.display = 'none';
+            uploadZoneSelected.style.display = 'flex';
+            analyseBtn.disabled = false;
+            analysisStatusBox.style.display = 'none';
+            hideError();
+        })
+        .catch((err) => {
+            analysisStatusBox.style.display = 'none';
+            resetUploadState();
+            showError(err.message);
+        });
     }
 
     function uploadFileToServer(file) {

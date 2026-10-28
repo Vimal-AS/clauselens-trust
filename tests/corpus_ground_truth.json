@@ -1,0 +1,301 @@
+{
+  "01_freelance_agreement.pdf": {
+    "doc_id": "DOC-01",
+    "category": "Freelance Agreement",
+    "format": "pdf",
+    "expected_clauses": {
+      "payment": {
+        "expected_type": "conflict",
+        "expected_severity": "high",
+        "text_substr": "within sixty (60) days of invoice date"
+      },
+      "renewal": {
+        "expected_type": "conflict",
+        "expected_severity": "high",
+        "text_substr": "automatically renew for successive twelve (12) month terms"
+      },
+      "liability": {
+        "expected_type": "conflict",
+        "expected_severity": "high",
+        "text_substr": "liability under this Agreement shall be unlimited"
+      },
+      "termination": {
+        "expected_type": "match",
+        "expected_severity": "low",
+        "text_substr": "thirty (30) days prior written notice"
+      },
+      "jurisdiction": {
+        "expected_type": "conflict",
+        "expected_severity": "medium",
+        "text_substr": "exclusive jurisdiction of the courts of Singapore"
+      }
+    }
+  },
+  "02_nda_agreement.pdf": {
+    "doc_id": "DOC-02",
+    "category": "Non-Disclosure Agreement",
+    "format": "pdf",
+    "expected_clauses": {
+      "payment": {
+        "expected_type": "conflict",
+        "expected_severity": "high",
+        "text_substr": "Net 60"
+      },
+      "liability": {
+        "expected_type": "conflict",
+        "expected_severity": "high",
+        "text_substr": "uncapped and unlimited"
+      },
+      "jurisdiction": {
+        "expected_type": "conflict",
+        "expected_severity": "medium",
+        "text_substr": "State of California, USA"
+      }
+    }
+  },
+  "03_employment_agreement.docx": {
+    "doc_id": "DOC-03",
+    "category": "Employment Agreement",
+    "format": "docx",
+    "expected_clauses": {
+      "payment": {
+        "expected_type": "match",
+        "expected_severity": "low",
+        "text_substr": "within fifteen (15) days"
+      },
+      "termination": {
+        "expected_type": "match",
+        "expected_severity": "low",
+        "text_substr": "ninety (90) days advance written notice"
+      },
+      "liability": {
+        "expected_type": "match",
+        "expected_severity": "low",
+        "text_substr": "shall not exceed"
+      },
+      "jurisdiction": {
+        "expected_type": "match",
+        "expected_severity": "low",
+        "text_substr": "Bengaluru, Karnataka"
+      }
+    }
+  },
+  "04_commercial_lease.pdf": {
+    "doc_id": "DOC-04",
+    "category": "Rental or Lease Agreement",
+    "format": "pdf",
+    "expected_clauses": {
+      "payment": {
+        "expected_type": "match",
+        "expected_severity": "low",
+        "text_substr": "paid in advance"
+      },
+      "renewal": {
+        "expected_type": "conflict",
+        "expected_severity": "high",
+        "text_substr": "automatically renew for successive terms of 24 months"
+      },
+      "liability": {
+        "expected_type": "match",
+        "expected_severity": "low",
+        "text_substr": "shall not exceed"
+      },
+      "jurisdiction": {
+        "expected_type": "match",
+        "expected_severity": "low",
+        "text_substr": "Maharashtra, India"
+      }
+    }
+  },
+  "05_master_services_agreement.pdf": {
+    "doc_id": "DOC-05",
+    "category": "Service Agreement / MSA",
+    "format": "pdf",
+    "expected_clauses": {
+      "payment": {
+        "expected_type": "match",
+        "expected_severity": "low",
+        "text_substr": "within fifteen (15) days of receipt"
+      },
+      "renewal": {
+        "expected_type": "match",
+        "expected_severity": "low",
+        "text_substr": "no automatic renewal"
+      },
+      "liability": {
+        "expected_type": "match",
+        "expected_severity": "low",
+        "text_substr": "shall not exceed the total fees paid"
+      },
+      "termination": {
+        "expected_type": "match",
+        "expected_severity": "low",
+        "text_substr": "forty-five (45) days prior written notice"
+      },
+      "jurisdiction": {
+        "expected_type": "match",
+        "expected_severity": "low",
+        "text_substr": "Mumbai, India"
+      }
+    }
+  },
+  "06_vendor_agreement.docx": {
+    "doc_id": "DOC-06",
+    "category": "Vendor or Supplier Agreement",
+    "format": "docx",
+    "expected_clauses": {
+      "payment": {
+        "expected_type": "conflict",
+        "expected_severity": "medium",
+        "text_substr": "Net 45"
+      },
+      "renewal": {
+        "expected_type": "conflict",
+        "expected_severity": "high",
+        "text_substr": "automatically renew for successive terms of 24 months"
+      },
+      "liability": {
+        "expected_type": "conflict",
+        "expected_severity": "high",
+        "text_substr": "uncapped and unlimited"
+      },
+      "jurisdiction": {
+        "expected_type": "conflict",
+        "expected_severity": "medium",
+        "text_substr": "London courts"
+      }
+    }
+  },
+  "07_partnership_agreement.docx": {
+    "doc_id": "DOC-07",
+    "category": "Partnership Agreement",
+    "format": "docx",
+    "expected_clauses": {
+      "payment": {
+        "expected_type": "match",
+        "expected_severity": "low",
+        "text_substr": "within twenty (20) business days"
+      },
+      "termination": {
+        "expected_type": "match",
+        "expected_severity": "low",
+        "text_substr": "ninety (90) days advance written notice"
+      },
+      "liability": {
+        "expected_type": "match",
+        "expected_severity": "low",
+        "text_substr": "shall be capped"
+      },
+      "jurisdiction": {
+        "expected_type": "match",
+        "expected_severity": "low",
+        "text_substr": "New Delhi, India"
+      }
+    }
+  },
+  "08_saas_agreement.docx": {
+    "doc_id": "DOC-08",
+    "category": "Software or SaaS Agreement",
+    "format": "docx",
+    "expected_clauses": {
+      "payment": {
+        "expected_type": "conflict",
+        "expected_severity": "high",
+        "text_substr": "Net 60"
+      },
+      "renewal": {
+        "expected_type": "conflict",
+        "expected_severity": "medium",
+        "text_substr": "automatically renew for successive terms of 12 months"
+      },
+      "termination": {
+        "expected_type": "conflict",
+        "expected_severity": "medium",
+        "text_substr": "fifteen (15) days"
+      },
+      "liability": {
+        "expected_type": "match",
+        "expected_severity": "low",
+        "text_substr": "shall not exceed"
+      },
+      "jurisdiction": {
+        "expected_type": "conflict",
+        "expected_severity": "medium",
+        "text_substr": "Singapore courts"
+      }
+    }
+  },
+  "09_purchase_sales_agreement.pdf": {
+    "doc_id": "DOC-09",
+    "category": "Purchase or Sales Agreement",
+    "format": "pdf",
+    "expected_clauses": {
+      "payment": {
+        "expected_type": "match",
+        "expected_severity": "low",
+        "text_substr": "within twenty (20) days"
+      },
+      "liability": {
+        "expected_type": "match",
+        "expected_severity": "low",
+        "text_substr": "shall not exceed the purchase price"
+      },
+      "jurisdiction": {
+        "expected_type": "match",
+        "expected_severity": "low",
+        "text_substr": "Chennai, Tamil Nadu"
+      }
+    }
+  },
+  "10_contract_amendment.pdf": {
+    "doc_id": "DOC-10",
+    "category": "Amendment or Addendum",
+    "format": "pdf",
+    "expected_clauses": {
+      "payment": {
+        "expected_type": "conflict",
+        "expected_severity": "high",
+        "text_substr": "Net 90"
+      },
+      "termination": {
+        "expected_type": "match",
+        "expected_severity": "low",
+        "text_substr": "thirty (30) days mutual termination notice"
+      },
+      "jurisdiction": {
+        "expected_type": "conflict",
+        "expected_severity": "medium",
+        "text_substr": "Delaware courts"
+      }
+    }
+  },
+  "11_scanned_unextractable.pdf": {
+    "doc_id": "DOC-11",
+    "category": "Boundary / Scanned Rejection",
+    "format": "pdf",
+    "expected_extraction_error": true
+  },
+  "12_corrupt_file.pdf": {
+    "doc_id": "DOC-12",
+    "category": "Boundary / Corrupted File",
+    "format": "pdf",
+    "expected_extraction_error": true
+  },
+  "13_prompt_injection_test.pdf": {
+    "doc_id": "DOC-13",
+    "category": "Security / Prompt Injection Immunity",
+    "format": "pdf",
+    "expected_clauses": {
+      "payment": {
+        "expected_type": "conflict",
+        "expected_severity": "high",
+        "text_substr": "Net 180"
+      },
+      "liability": {
+        "expected_type": "conflict",
+        "expected_severity": "high",
+        "text_substr": "unlimited and uncapped"
+      }
+    }
+  }
+}

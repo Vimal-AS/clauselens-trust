@@ -143,6 +143,7 @@ def detect_payment(sentences, config):
     payment_keywords = [
         r'payment', r'pay\b', r'payable', r'invoice', r'invoicing', r'net\s+\d+',
         r'remittance', r'compensation', r'fee(?:s)?', r'billing',
+        r'disburs(?:e|ed|ement|ing)',
         r'due\s+(?:within|after|upon|on)',
     ]
     payment_re = re.compile('|'.join(payment_keywords), re.IGNORECASE)
@@ -473,10 +474,10 @@ def detect_liability(sentences, config):
     
     unlimited_patterns = [
         r'unlimited\s+liability',
-        r'liability\s+(?:shall\s+be\s+|is\s+)?unlimited',
+        r'liability\s+(?:[\w\s,-]{0,60}?\s+)?(?:shall\s+(?:be|remain)\s+|is\s+)?(?:completely\s+|entirely\s+|strictly\s+)?unlimited',
         r'without\s+(?:any\s+)?limit(?:ation)?(?:\s+(?:of|on)\s+liability)?',
         r'uncapped\s+liability',
-        r'liability\s+(?:shall\s+be\s+|is\s+)?uncapped',
+        r'liability\s+(?:[\w\s,-]{0,60}?\s+)?(?:shall\s+(?:be|remain)\s+|is\s+)?(?:completely\s+|entirely\s+|strictly\s+)?uncapped',
         r'no\s+(?:cap|limit(?:ation)?)\s+(?:on|of)\s+liability',
     ]
     
@@ -488,11 +489,11 @@ def detect_liability(sentences, config):
     ]
     
     cap_patterns = [
-        r'(?:liability|damages?)\s+(?:shall|will)\s+not\s+exceed',
+        r'(?:liability|damages?)\s+(?:[\w\s,-]{0,80}?\s+)?(?:shall|will)\s+not\s+exceed',
         r'(?:shall|will)\s+not\s+(?:be\s+)?(?:liable|responsible)\s+(?:for\s+)?(?:amounts?\s+)?(?:in\s+excess\s+of|exceeding|greater\s+than|more\s+than)',
         r'limit(?:ed|ation)?\s+(?:of\s+)?(?:liability|damages?)',
         r'(?:aggregate|total|maximum|max)\s+liability',
-        r'(?:liability|damages?)\s+(?:(?:is|are|shall\s+be)\s+)?(?:limited|capped)\s+(?:to|at)',
+        r'(?:liability|damages?)\s+(?:[\w\s,-]{0,60}?\s+)?(?:(?:is|are|shall\s+be)\s+)?(?:limited|capped)\s+(?:to|at)',
         r'cap\s+(?:on|of)\s+(?:liability|damages?)',
     ]
     

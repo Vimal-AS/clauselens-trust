@@ -126,6 +126,16 @@ def test_demo_and_analysis_workflow(client):
     assert pdf_export.content_type == 'application/pdf'
     assert len(pdf_export.data) > 1000
 
+    # 7b. Filtered Exports (JSON & PDF)
+    filtered_json = client.get(f'/api/analyses/{analysis_id}/export.json?severity=high')
+    assert filtered_json.status_code == 200
+    fj_data = json.loads(filtered_json.data)
+    assert all(f['severity'] == 'high' for f in fj_data['findings'])
+
+    filtered_pdf = client.get(f'/api/analyses/{analysis_id}/export.pdf?severity=high')
+    assert filtered_pdf.status_code == 200
+    assert len(filtered_pdf.data) > 1000
+
     # 8. Page Image Preview
     page_img = client.get(f'/api/analyses/{analysis_id}/page/1.png?finding_id={first_id}')
     assert page_img.status_code == 200

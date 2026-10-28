@@ -11,7 +11,7 @@
     <div class="card upload-card">
         <div class="card-header">
             <h2 class="card-title">Upload Contract Document</h2>
-            <span class="card-badge">PDF or DOCX</span>
+            <span class="card-badge" id="uploadCardBadge">PDF, DOCX or Images</span>
         </div>
         <div class="card-body">
             <div class="upload-zone" id="uploadZone">
@@ -25,10 +25,10 @@
                     </div>
                     <div class="upload-instructions">
                         <p class="primary-text">Drag & drop your contract here, or <button type="button" class="btn-link" id="browseBtn">browse files</button></p>
-                        <p class="secondary-text">Supported formats: Adobe PDF (.pdf), Word Document (.docx) • Max 10 MB</p>
+                        <p class="secondary-text">Supported formats: PDF (.pdf), Word (.docx), Images (.jpg, .jpeg, .png) • Max 10 MB per file</p>
                     </div>
                 </div>
-                <input type="file" id="fileInput" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword" aria-label="Upload contract file (PDF or DOCX)" style="display:none">
+                <input type="file" id="fileInput" accept=".pdf,.docx,.jpg,.jpeg,.png,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword,image/jpeg,image/png" aria-label="Upload contract file (PDF, DOCX, or Images)" multiple style="display:none">
                 
                 <div class="upload-zone-selected" id="uploadZoneSelected" style="display:none">
                     <div class="file-icon" id="fileIconBadge">

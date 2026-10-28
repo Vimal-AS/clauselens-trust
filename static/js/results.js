@@ -106,10 +106,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Update Header
                 const a = data.analysis;
                 document.getElementById('resultsDocTitle').textContent = a.original_filename;
-                document.getElementById('resultsDocSubtitle').textContent = `Format: ${a.file_type.toUpperCase()} • Analyzed ${new Date(a.completed_at || a.created_at).toLocaleString()}`;
+                const fileTypeLabel = a.file_type === 'images' ? `IMAGES (${a.total_pages || 0} Files)` : a.file_type.toUpperCase();
+                document.getElementById('resultsDocSubtitle').textContent = `Format: ${fileTypeLabel} • Analyzed ${new Date(a.completed_at || a.created_at).toLocaleString()}`;
                 
                 const sampleBadge = document.getElementById('sampleDocBadge');
                 sampleBadge.style.display = a.is_sample ? 'inline-block' : 'none';
+
+                // Display warnings if any
+                const warningsAlert = document.getElementById('analysisWarningsAlert');
+                const warningsList = document.getElementById('analysisWarningsList');
+                const warnings = data.warnings || (data.analysis && data.analysis.warnings) || [];
+                if (warningsAlert && warningsList) {
+                    if (warnings.length > 0) {
+                        warningsList.innerHTML = warnings.map(w => `<li>${escapeHtml(w)}</li>`).join('');
+                        warningsAlert.style.display = 'flex';
+                    } else {
+                        warningsAlert.style.display = 'none';
+                        warningsList.innerHTML = '';
+                    }
+                }
 
                 // Populate Summary Cards
                 updateSummaryCards(data.summary);
@@ -199,11 +214,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const sevClass = f.severity ? `severity-${f.severity}` : 'severity-low';
             card.className = `finding-card ${sevClass}`;
 
-            const locationStr = f.line_reference 
-                ? f.line_reference 
-                : (f.page_number ? `Page ${f.page_number}` : (f.paragraph_reference ? f.paragraph_reference : 'Location: not available'));
+            const isImageContract = currentAnalysisData && currentAnalysisData.analysis && currentAnalysisData.analysis.file_type === 'images';
+            const locationStr = isImageContract
+                ? (f.paragraph_reference || (f.page_number ? `Image ${f.page_number}` : 'Location: not available'))
+                : (f.line_reference 
+                    ? f.line_reference 
+                    : (f.page_number ? `Page ${f.page_number}` : (f.paragraph_reference ? f.paragraph_reference : 'Location: not available')));
 
-            const hasPage = !!f.page_number && currentAnalysisData && currentAnalysisData.analysis.file_type === 'pdf';
+            const hasPage = (!!f.page_number && currentAnalysisData && currentAnalysisData.analysis.file_type === 'pdf') ||
+                            (isImageContract && !!f.page_number);
 
             card.innerHTML = `
                 <div class="finding-header" data-id="${f.id}">
@@ -274,7 +293,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <button type="button" class="btn btn-sm btn-outline save-review-btn" data-id="${f.id}">Save Note</button>
                         </div>
                         <div>
-                            ${hasPage ? `<button type="button" class="btn btn-sm btn-ghost view-page-btn" data-page="${f.page_number}" data-finding="${f.id}"><svg class="btn-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> View Page Highlight</button>` : ''}
+                            ${hasPage ? `<button type="button" class="btn btn-sm btn-ghost view-page-btn" data-page="${f.page_number}" data-finding="${f.id}"><svg class="btn-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> ${isImageContract ? 'View Source Image' : 'View Page Highlight'}</button>` : ''}
                         </div>
                     </div>
                 </div>
@@ -349,7 +368,11 @@ document.addEventListener('DOMContentLoaded', () => {
         pdfPreviewModal.style.display = 'flex';
         pdfPageSpinner.style.display = 'block';
         pdfPageImage.style.display = 'none';
-        pdfPreviewTitle.textContent = `Document Evidence Preview — Page ${pageNum}`;
+
+        const isImageContract = currentAnalysisData && currentAnalysisData.analysis && currentAnalysisData.analysis.file_type === 'images';
+        pdfPreviewTitle.textContent = isImageContract 
+            ? `Document Evidence Preview — Image ${pageNum}` 
+            : `Document Evidence Preview — Page ${pageNum}`;
 
         const imgUrl = `/api/analyses/${currentAnalysisId}/page/${pageNum}.png?finding_id=${findingId}`;
         pdfPageImage.onload = () => {
@@ -429,7 +452,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 .then(data => {
                     rawDocumentText = data.full_text || '';
                     plainTextDocTitle.textContent = `${data.filename} — Raw Plain Text`;
-                    const locationUnit = data.total_pages ? `${data.total_pages} Pages` : `${data.total_paragraphs || 0} Paragraphs`;
+                    const locationUnit = data.total_pages 
+                        ? (data.file_type === 'images' ? `${data.total_pages} Images` : `${data.total_pages} Pages`) 
+                        : `${data.total_paragraphs || 0} Paragraphs`;
                     plainTextDocStats.textContent = `${data.file_type.toUpperCase()} • ${locationUnit} • ${data.word_count.toLocaleString()} Words • ${data.character_count.toLocaleString()} Characters`;
                     plainTextContent.textContent = rawDocumentText;
                 })

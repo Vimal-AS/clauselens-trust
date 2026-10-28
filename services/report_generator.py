@@ -5,7 +5,7 @@ import json
 from datetime import datetime, timezone
 
 
-def generate_pdf_report(analysis_id, contract_name, timestamp, findings, policies, reports_folder):
+def generate_pdf_report(analysis_id, contract_name, timestamp, findings, policies, reports_folder, warnings=None):
     """Generate a PDF report for the analysis."""
     from reportlab.lib.pagesizes import A4
     from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -169,6 +169,13 @@ def generate_pdf_report(analysis_id, contract_name, timestamp, findings, policie
         config_desc = ', '.join(f'{k}: {v}' for k, v in config_dict.items())
         elements.append(Paragraph(f'• <b>{_escape(p.get("name", p.get("category", "Policy")))}</b>: {_escape(config_desc)}', body_style))
     elements.append(Spacer(1, 10))
+
+    # OCR / Image quality notices if any
+    if warnings:
+        elements.append(Paragraph('Document Quality &amp; OCR Notices', heading_style))
+        for w in warnings:
+            elements.append(Paragraph(f'• <font color="#d97706">▲</font> {_escape(w)}', small_style))
+        elements.append(Spacer(1, 10))
     
     # Detailed Findings
     elements.append(Paragraph('Detailed Findings', heading_style))
@@ -185,8 +192,12 @@ def generate_pdf_report(analysis_id, contract_name, timestamp, findings, policie
         
         color_hex = '#ef4444' if severity == 'HIGH' else ('#f59e0b' if severity == 'MEDIUM' else '#10b981')
         
+        severity_clean = _escape(severity)
+        result_type_clean = _escape(result_type)
+        cat_clean = _escape(cat)
+        risk_id_clean = _escape(risk_id)
         elements.append(Spacer(1, 6))
-        elements.append(Paragraph(f'<font color="{color_hex}">■</font> <b>{risk_id} — {cat}</b> [{severity} / {result_type}]', subheading_style))
+        elements.append(Paragraph(f'<font color="{color_hex}">■</font> <b>{risk_id_clean} — {cat_clean}</b> [{severity_clean} / {result_type_clean}]', subheading_style))
         
         if _get(f, 'clause_title'):
             elements.append(Paragraph(f'<b>Clause Reference:</b> {_escape(_get(f, "clause_title"))}', body_style))
@@ -200,14 +211,18 @@ def generate_pdf_report(analysis_id, contract_name, timestamp, findings, policie
             elements.append(Paragraph(f'"{_escape(quote)}"', quote_style))
             
         locs = []
-        if _get(f, 'page_number'):
-            locs.append(f"Page {_get(f, 'page_number')}")
-        if _get(f, 'line_reference'):
-            locs.append(_escape(_get(f, 'line_reference')))
-        elif _get(f, 'paragraph_reference'):
-            locs.append(_escape(_get(f, 'paragraph_reference')))
+        para_ref = str(_get(f, 'paragraph_reference', ''))
+        if para_ref.startswith('Image '):
+            locs.append(_escape(para_ref))
         else:
-            locs.append("Location: not available")
+            if _get(f, 'page_number'):
+                locs.append(f"Page {_get(f, 'page_number')}")
+            if _get(f, 'line_reference'):
+                locs.append(_escape(_get(f, 'line_reference')))
+            elif _get(f, 'paragraph_reference'):
+                locs.append(_escape(_get(f, 'paragraph_reference')))
+            else:
+                locs.append("Location: not available")
             
         elements.append(Paragraph(f'<b>Location:</b> {", ".join(locs)} | <b>Verification:</b> {_escape((_get(f, "verification_status") or "N/A").replace("_", " ").title())}', small_style))
         elements.append(Paragraph(f'<b>Explanation:</b> {_escape(_get(f, "explanation"))}', body_style))
@@ -221,7 +236,7 @@ def generate_pdf_report(analysis_id, contract_name, timestamp, findings, policie
         if review_stat != 'not_reviewed':
             note = _get(f, 'review_note')
             note_str = f" — Note: {_escape(note)}" if note else ""
-            elements.append(Paragraph(f'<b>Review Status:</b> {review_stat.replace("_", " ").title()}{note_str}', small_style))
+            elements.append(Paragraph(f'<b>Review Status:</b> {_escape(review_stat.replace("_", " ").title())}{note_str}', small_style))
             
         elements.append(HRFlowable(width="100%", thickness=0.25, color=HexColor('#e2e8f0')))
     

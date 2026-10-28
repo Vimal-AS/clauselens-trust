@@ -7,9 +7,50 @@ from werkzeug.utils import secure_filename
 contracts_bp = Blueprint('contracts', __name__)
 
 ALLOWED_EXTENSIONS = {'pdf', 'docx'}
+IMAGE_EXTENSIONS = {'jpg', 'jpeg', 'png'}
 PDF_MAGIC = b'%PDF'
 DOCX_MAGIC = b'PK\x03\x04'
 MAX_ZIP_RATIO = 100  # zip bomb guard
+MAX_IMAGE_COUNT = 20
+MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024  # 10 MB per image
+MAX_BATCH_SIZE_BYTES = 50 * 1024 * 1024  # 50 MB total
+
+
+def _validate_image_file(file_storage):
+    """Validate uploaded image file. Returns (ok, error_message, ext, size)."""
+    if not file_storage or file_storage.filename == '':
+        return False, 'No file selected.', None, 0
+
+    filename = file_storage.filename
+    ext = filename.rsplit('.', 1)[-1].lower() if '.' in filename else ''
+    if ext not in IMAGE_EXTENSIONS:
+        return False, f"File '{filename}' has an unsupported extension .{ext}. Please upload JPG, JPEG, or PNG images.", None, 0
+
+    header = file_storage.read(8)
+    file_storage.seek(0, 2)
+    size = file_storage.tell()
+    file_storage.seek(0)
+
+    if size > MAX_IMAGE_SIZE_BYTES:
+        return False, f"Image '{filename}' exceeds the 10 MB size limit ({size / (1024*1024):.1f} MB).", None, size
+
+    if ext in ('jpg', 'jpeg'):
+        if header[:3] != b'\xff\xd8\xff':
+            return False, f"File '{filename}' does not appear to be a valid JPEG image.", None, size
+    elif ext == 'png':
+        if header[:8] != b'\x89PNG\r\n\x1a\n':
+            return False, f"File '{filename}' does not appear to be a valid PNG image.", None, size
+
+    try:
+        from PIL import Image
+        img = Image.open(file_storage)
+        img.verify()
+        file_storage.seek(0)
+    except Exception:
+        file_storage.seek(0)
+        return False, f"Image '{filename}' appears corrupted or unreadable.", None, size
+
+    return True, None, ext, size
 
 
 def _validate_file(file_storage):
@@ -55,8 +96,92 @@ def _validate_file(file_storage):
     return True, None, file_type
 
 
+@contracts_bp.route('/api/contracts/upload-images', methods=['POST'])
+def upload_contract_images():
+    """Upload multiple contract page images (JPG, JPEG, PNG)."""
+    files = request.files.getlist('images') or request.files.getlist('files')
+    if not files and 'file' in request.files:
+        files = request.files.getlist('file')
+
+    if not files or all(not f or f.filename == '' for f in files):
+        return jsonify({'error': 'No images provided for upload.'}), 400
+
+    # Filter out empty entries
+    files = [f for f in files if f and f.filename]
+
+    if len(files) > MAX_IMAGE_COUNT:
+        return jsonify({
+            'error': f'Maximum of {MAX_IMAGE_COUNT} images allowed per upload. You selected {len(files)} images.'
+        }), 400
+
+    total_size = 0
+    validated_files = []
+
+    for f in files:
+        ok, err, ext, size = _validate_image_file(f)
+        if not ok:
+            return jsonify({'error': err}), 400
+        total_size += size
+        validated_files.append((f, ext, size))
+
+    if total_size > MAX_BATCH_SIZE_BYTES:
+        return jsonify({
+            'error': f'Total upload size exceeds 50 MB limit ({total_size / (1024*1024):.1f} MB).'
+        }), 400
+
+    import json
+    batch_uuid = uuid.uuid4().hex
+    folder_name = f"{batch_uuid}.images"
+    folder_path = os.path.join(current_app.config['UPLOAD_FOLDER'], folder_name)
+    os.makedirs(folder_path, exist_ok=True)
+
+    manifest_images = []
+    for idx, (f, ext, size) in enumerate(validated_files, 1):
+        clean_name = secure_filename(f.filename) or f"image_{idx}.{ext}"
+        saved_name = f"{idx:03d}_{clean_name}"
+        save_path = os.path.join(folder_path, saved_name)
+        f.save(save_path)
+        manifest_images.append({
+            'index': idx,
+            'original_filename': f.filename,
+            'saved_filename': saved_name,
+            'file_size': size,
+            'ext': ext,
+        })
+
+    manifest = {
+        'batch_id': batch_uuid,
+        'file_type': 'images',
+        'total_images': len(manifest_images),
+        'total_size': total_size,
+        'images': manifest_images,
+    }
+
+    with open(os.path.join(folder_path, 'manifest.json'), 'w', encoding='utf-8') as mf:
+        json.dump(manifest, mf, indent=2)
+
+    first_names = [item['original_filename'] for item in manifest_images[:2]]
+    more_count = len(manifest_images) - len(first_names)
+    display_title = f"{len(manifest_images)} Images: {', '.join(first_names)}{' (+' + str(more_count) + ' more)' if more_count > 0 else ''}"
+
+    return jsonify({
+        'message': f'{len(manifest_images)} images uploaded successfully.',
+        'file': {
+            'uuid_name': folder_name,
+            'original_filename': display_title,
+            'file_type': 'images',
+            'file_size': total_size,
+            'total_images': len(manifest_images),
+            'is_sample': False
+        }
+    })
+
+
 @contracts_bp.route('/api/contracts/upload', methods=['POST'])
 def upload_contract():
+    if 'images' in request.files:
+        return upload_contract_images()
+
     if 'file' not in request.files:
         return jsonify({'error': 'No file provided.'}), 400
     
@@ -335,13 +460,18 @@ def analyse_contract():
         # Step 6: Store results
         from database import get_db
         from datetime import datetime, timezone
+        import json
         conn = get_db()
         
+        warnings = extraction.get('warnings', [])
+        warn_data = json.dumps({'warnings': warnings}) if warnings else None
+
         conn.execute(
-            "INSERT INTO analyses (id, filename, original_filename, file_type, file_size, status, total_pages, total_paragraphs, extracted_text_length, is_sample, created_at, completed_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO analyses (id, filename, original_filename, file_type, file_size, status, total_pages, total_paragraphs, extracted_text_length, is_sample, error_message, created_at, completed_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (analysis_id, uuid_name, original_filename, file_type, file_size, 'completed',
              extraction.get('total_pages'), extraction.get('total_paragraphs'),
              len(extraction.get('full_text', '')), 1 if is_sample else 0,
+             warn_data,
              datetime.now(timezone.utc).isoformat(), datetime.now(timezone.utc).isoformat())
         )
         
@@ -370,13 +500,18 @@ def analyse_contract():
         c2.close()
         if not is_sample and keep and keep['value'] == 'false':
             try:
-                os.remove(file_path)
+                if os.path.isdir(file_path):
+                    import shutil
+                    shutil.rmtree(file_path, ignore_errors=True)
+                else:
+                    os.remove(file_path)
             except OSError:
                 pass
         
         return jsonify({
             'message': 'Analysis complete.',
             'analysis_id': analysis_id,
+            'warnings': warnings,
             'summary': {
                 'total_findings': len(findings),
                 'conflicts': sum(1 for f in findings if f.get('result_type') == 'conflict'),

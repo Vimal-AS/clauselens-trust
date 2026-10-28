@@ -20,6 +20,8 @@ def extract_document(file_path, file_type):
         return _extract_pdf(file_path)
     elif file_type == 'docx':
         return _extract_docx(file_path)
+    elif file_type in ('images', 'image', 'jpg', 'jpeg', 'png'):
+        return _extract_images(file_path)
     else:
         return {'error': f'Unsupported file type: {file_type}'}
 
@@ -352,3 +354,270 @@ def _extract_clause_title(sentence_text, full_context, position):
                 return heading_match.group(1).strip()
     
     return None
+
+
+def _configure_tesseract():
+    """Ensure pytesseract has a valid tesseract_cmd on Windows/Linux."""
+    try:
+        import pytesseract
+    except ImportError:
+        return None, "pytesseract is not installed. Please install it with: pip install pytesseract"
+
+    import shutil
+
+    # 1. Configured via environment variable
+    env_cmd = os.environ.get('TESSERACT_CMD')
+    if env_cmd and os.path.isfile(env_cmd):
+        pytesseract.pytesseract.tesseract_cmd = env_cmd
+        return pytesseract, None
+
+    # 2. Check if tesseract binary is already discoverable in PATH
+    which_cmd = shutil.which('tesseract')
+    if which_cmd:
+        return pytesseract, None
+
+    # 3. Known standard Windows installation locations
+    candidates = [
+        r'C:\Program Files\tesseract.exe',
+        r'C:\Program Files\Tesseract-OCR\tesseract.exe',
+        r'C:\Program Files (x86)\Tesseract-OCR\tesseract.exe',
+        os.path.expanduser(r'~\AppData\Local\Programs\Tesseract-OCR\tesseract.exe'),
+    ]
+    for p in candidates:
+        if os.path.isfile(p):
+            pytesseract.pytesseract.tesseract_cmd = p
+            return pytesseract, None
+
+    return pytesseract, "Tesseract OCR binary not found. Please install Tesseract OCR on your system or set TESSERACT_CMD."
+
+
+def _resolve_image_list(file_path):
+    """Resolve ordered list of image dicts {index, original_filename, path} from file_path."""
+    import json
+
+    if os.path.isdir(file_path):
+        manifest_path = os.path.join(file_path, 'manifest.json')
+        if os.path.isfile(manifest_path):
+            try:
+                with open(manifest_path, 'r', encoding='utf-8') as f:
+                    manifest = json.load(f)
+                items = []
+                for item in manifest.get('images', []):
+                    img_name = item.get('saved_filename') or item.get('original_filename')
+                    img_abs = os.path.join(file_path, img_name)
+                    if os.path.isfile(img_abs):
+                        items.append({
+                            'index': item.get('index', len(items) + 1),
+                            'original_filename': item.get('original_filename', img_name),
+                            'path': img_abs,
+                        })
+                if items:
+                    return items, None
+            except Exception:
+                pass
+
+        exts = ('.jpg', '.jpeg', '.png')
+        files = sorted([f for f in os.listdir(file_path) if f.lower().endswith(exts)])
+        if not files:
+            return None, "No image files found in upload directory."
+        items = []
+        for idx, fname in enumerate(files, 1):
+            items.append({
+                'index': idx,
+                'original_filename': fname,
+                'path': os.path.join(file_path, fname),
+            })
+        return items, None
+
+    elif os.path.isfile(file_path):
+        if file_path.lower().endswith('.json'):
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    manifest = json.load(f)
+                return manifest.get('images', []), None
+            except Exception as e:
+                return None, f"Could not read image manifest: {e}"
+        else:
+            fname = os.path.basename(file_path)
+            return [{
+                'index': 1,
+                'original_filename': fname,
+                'path': file_path,
+            }], None
+
+    return None, f"Image path '{file_path}' not found."
+
+
+def _check_image_quality(img, filename, img_num):
+    """Inspect image for blurriness, corruption, or low readability."""
+    warnings = []
+    try:
+        from PIL import ImageFilter, ImageStat
+        gray = img.convert('L')
+        w, h = img.size
+        if w < 120 or h < 120:
+            warnings.append(f"Image {img_num} ({filename}) has very low resolution ({w}x{h} px). Text may be unreadable.")
+            return warnings, 0.0
+
+        lap_kernel = ImageFilter.Kernel((3, 3), [0, 1, 0, 1, -4, 1, 0, 1, 0], scale=1, offset=128)
+        edges = gray.filter(lap_kernel)
+        stat = ImageStat.Stat(edges)
+        sharpness = stat.var[0]
+
+        edge_find = gray.filter(ImageFilter.FIND_EDGES)
+        edge_var = ImageStat.Stat(edge_find).var[0]
+
+        # Blur threshold: severely blurred images have very low edge variance
+        if sharpness < 40.0 and edge_var < 150.0:
+            warnings.append(f"Image {img_num} ({filename}) appears blurry or low contrast (sharpness score: {sharpness:.1f}). OCR recognition accuracy may be reduced.")
+
+        return warnings, sharpness
+    except Exception:
+        return warnings, 50.0
+
+
+def _split_image_sentences(page_text, img_num, orig_name, img_lines):
+    """Split extracted image text into sentences while tracking image location metadata."""
+    sentences = []
+    raw_sentences = _split_into_sentences_raw(page_text)
+    current_clause_title = None
+    char_pos = 0
+
+    for raw in raw_sentences:
+        raw = raw.strip()
+        if not raw:
+            continue
+
+        idx = page_text.find(raw, char_pos)
+        if idx == -1:
+            idx = char_pos
+
+        line_ref = _find_line_for_text(raw, img_lines)
+        clause_title = _extract_clause_title(raw, page_text, idx)
+        if clause_title:
+            current_clause_title = clause_title
+
+        source_label = f"Image {img_num} ({orig_name})"
+        sentences.append({
+            'text': raw,
+            'page': img_num,
+            'paragraph': None,
+            'paragraph_reference': source_label,
+            'line_ref': line_ref,
+            'clause_title': clause_title or current_clause_title,
+            'source': source_label,
+            'image_filename': orig_name,
+            'image_number': img_num,
+        })
+        char_pos = idx + len(raw)
+
+    return sentences
+
+
+def _extract_images(file_path):
+    """Extract text from one or more images using Tesseract OCR with location & quality tracking."""
+    items, err = _resolve_image_list(file_path)
+    if err:
+        return {'error': err}
+
+    try:
+        from PIL import Image
+    except ImportError:
+        return {'error': 'Pillow is not installed. Please install it with: pip install Pillow'}
+
+    pytesseract, tess_err = _configure_tesseract()
+    if tess_err:
+        return {'error': tess_err}
+
+    pages = []
+    all_text_parts = []
+    all_lines = []
+    all_sentences = []
+    all_warnings = []
+
+    for item in items:
+        img_num = item.get('index', 1)
+        orig_name = item.get('original_filename', f'Image_{img_num}')
+        img_path = item.get('path')
+
+        if not img_path or not os.path.exists(img_path):
+            all_warnings.append(f"Image {img_num} ({orig_name}): File not found on disk.")
+            continue
+
+        try:
+            with Image.open(img_path) as img:
+                img_rgb = img.convert('RGB')
+        except Exception as e:
+            all_warnings.append(f"Image {img_num} ({orig_name}): Unable to read image file ({str(e)}). Image may be corrupted or unreadable.")
+            continue
+
+        # Check blurriness & resolution
+        q_warnings, sharpness = _check_image_quality(img_rgb, orig_name, img_num)
+        all_warnings.extend(q_warnings)
+
+        # Run OCR
+        try:
+            ocr_text = pytesseract.image_to_string(img_rgb)
+        except Exception as e:
+            all_warnings.append(f"Image {img_num} ({orig_name}): OCR extraction failed ({str(e)}).")
+            continue
+
+        clean_text = ocr_text.strip()
+        words = re.findall(r'\b[a-zA-Z0-9]{2,}\b', clean_text)
+        if len(clean_text) < 25 or len(words) < 4:
+            all_warnings.append(
+                f"Image {img_num} ({orig_name}) contains insufficient readable text ({len(words)} words extracted). "
+                f"Please verify this image contains readable contract terms."
+            )
+
+        img_lines = []
+        page_text_parts = []
+        line_idx = 0
+
+        for raw_line in ocr_text.splitlines():
+            line_str = raw_line.strip()
+            if not line_str:
+                continue
+            line_idx += 1
+            page_text_parts.append(line_str)
+            line_info = {
+                'text': line_str,
+                'line_idx': line_idx,
+                'page_num': img_num,
+                'bbox': None,
+            }
+            img_lines.append(line_info)
+            all_lines.append(line_info)
+
+        img_page_text = "\n".join(page_text_parts)
+        pages.append({
+            'page_num': img_num,
+            'filename': orig_name,
+            'text': img_page_text,
+            'lines': img_lines,
+            'sharpness': sharpness,
+        })
+
+        if img_page_text:
+            all_text_parts.append(img_page_text)
+            img_sentences = _split_image_sentences(img_page_text, img_num, orig_name, img_lines)
+            all_sentences.extend(img_sentences)
+
+    full_text = "\n\n".join(all_text_parts)
+    if len(full_text.strip()) < 20:
+        return {
+            'error': 'The uploaded images contain insufficient or unreadable text. OCR could not extract readable contract terms. Please ensure the images are clear, legible contract documents.',
+            'warnings': all_warnings
+        }
+
+    return {
+        'full_text': full_text,
+        'sentences': all_sentences,
+        'pages': pages,
+        'paragraphs': None,
+        'total_pages': len(items),
+        'total_paragraphs': None,
+        'all_lines': all_lines,
+        'warnings': all_warnings,
+        'error': None,
+    }
