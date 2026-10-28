@@ -196,8 +196,50 @@ document.addEventListener('DOMContentLoaded', () => {
         visibleCount.textContent = filteredFindings.length;
         filteredFindingsCount.textContent = filteredFindings.length;
 
+        // Update active stat card highlight
+        document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active-filter'));
+        if (sev === 'high') {
+            document.querySelector('.stat-card[data-card="high"]')?.classList.add('active-filter');
+        } else if (sev === 'medium') {
+            document.querySelector('.stat-card[data-card="medium"]')?.classList.add('active-filter');
+        } else if (sev === 'low') {
+            document.querySelector('.stat-card[data-card="low"]')?.classList.add('active-filter');
+        }
+        if (rt === 'conflict') {
+            document.querySelector('.stat-card[data-card="conflicts"]')?.classList.add('active-filter');
+        } else if (rt === 'match') {
+            document.querySelector('.stat-card[data-card="matches"]')?.classList.add('active-filter');
+        } else if (rt === 'uncertain') {
+            document.querySelector('.stat-card[data-card="uncertain"]')?.classList.add('active-filter');
+        } else if (rt === 'not_found') {
+            document.querySelector('.stat-card[data-card="notfound"]')?.classList.add('active-filter');
+        }
+
         renderFindings(filteredFindings);
     }
+
+    // Stat card quick click-to-filter
+    document.querySelectorAll('.stat-card').forEach(card => {
+        card.addEventListener('click', () => {
+            const type = card.getAttribute('data-card');
+            if (!type) return;
+            if (type === 'total') {
+                filterSeverity.value = 'all';
+                filterResultType.value = 'all';
+            } else if (type === 'high' || type === 'medium' || type === 'low') {
+                filterSeverity.value = (filterSeverity.value === type) ? 'all' : type;
+            } else if (type === 'conflicts') {
+                filterResultType.value = (filterResultType.value === 'conflict') ? 'all' : 'conflict';
+            } else if (type === 'matches') {
+                filterResultType.value = (filterResultType.value === 'match') ? 'all' : 'match';
+            } else if (type === 'uncertain') {
+                filterResultType.value = (filterResultType.value === 'uncertain') ? 'all' : 'uncertain';
+            } else if (type === 'notfound') {
+                filterResultType.value = (filterResultType.value === 'not_found') ? 'all' : 'not_found';
+            }
+            applyFilters();
+        });
+    });
 
     function renderFindings(findings) {
         findingsList.innerHTML = '';
@@ -302,18 +344,19 @@ document.addEventListener('DOMContentLoaded', () => {
             findingsList.appendChild(card);
         });
 
-        // Attach finding accordion toggle
+        // Attach finding accordion toggle with smooth icon rotation
         document.querySelectorAll('.finding-header').forEach(header => {
             header.addEventListener('click', (e) => {
                 if (e.target.closest('button') || e.target.closest('select') || e.target.closest('input')) return;
                 const body = header.nextElementSibling;
                 const icon = header.querySelector('.toggle-icon');
-                if (body.style.display === 'none') {
+                const isHidden = body.style.display === 'none';
+                if (isHidden) {
                     body.style.display = 'block';
-                    icon.textContent = '▲';
+                    if (icon) icon.classList.add('rotated');
                 } else {
                     body.style.display = 'none';
-                    icon.textContent = '▼';
+                    if (icon) icon.classList.remove('rotated');
                 }
             });
         });
