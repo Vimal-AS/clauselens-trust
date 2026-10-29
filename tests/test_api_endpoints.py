@@ -157,6 +157,16 @@ def test_demo_list_and_docx_demo(client):
     assert list_res.status_code == 200
     demos = list_res.json['demos']
     assert len(demos) >= 5
+
+    # Verify no demo contracts mention 'risk' or 'conflict' in their badges/titles
+    for d in demos:
+        badge = (d.get('badge') or d.get('risk_badge') or '').lower()
+        title = (d.get('title') or '').lower()
+        summary = (d.get('summary') or d.get('conflicts_summary') or '').lower()
+        assert 'risk' not in badge, f"Demo {d['id']} badge mentions risk: {badge}"
+        assert 'conflict' not in badge, f"Demo {d['id']} badge mentions conflict: {badge}"
+        assert 'risk' not in title, f"Demo {d['id']} title mentions risk: {title}"
+        assert 'conflict' not in summary, f"Demo {d['id']} summary mentions conflict: {summary}"
     
     # Load a DOCX demo (Vendor supply agreement)
     docx_demo = client.post('/api/contracts/demo', json={'demo_id': 'vendor_supply'})
@@ -178,15 +188,29 @@ def test_demo_list_and_docx_demo(client):
 
 
 def test_settings_and_data_deletion(client):
+    # Restore defaults first to ensure clean state
+    restore_res = client.post('/api/settings/restore-defaults')
+    assert restore_res.status_code == 200
+
+    # Verify default show_plain_english_explanations is 'false'
+    initial_res = client.get('/api/settings')
+    assert initial_res.status_code == 200
+    assert initial_res.json['settings'].get('show_plain_english_explanations') == 'false'
+
     # Update settings
     put_res = client.put('/api/settings', json={
-        'settings': {'theme': 'dark', 'language': 'ta'}
+        'settings': {
+            'theme': 'dark',
+            'language': 'ta',
+            'show_plain_english_explanations': 'true'
+        }
     })
     assert put_res.status_code == 200
     
     get_res = client.get('/api/settings')
     assert get_res.json['settings']['theme'] == 'dark'
     assert get_res.json['settings']['language'] == 'ta'
+    assert get_res.json['settings']['show_plain_english_explanations'] == 'true'
     
     # Delete all data
     del_res = client.post('/api/settings/delete-data')

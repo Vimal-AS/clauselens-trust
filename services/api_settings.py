@@ -11,6 +11,7 @@ def get_settings():
     rows = conn.execute("SELECT * FROM settings").fetchall()
     conn.close()
     settings = {row['key']: row['value'] for row in rows}
+    settings.setdefault('show_plain_english_explanations', 'false')
     return jsonify({'settings': settings})
 
 
@@ -46,6 +47,7 @@ def restore_default_settings():
         'default_severity_filter': 'all',
         'default_category_filter': 'all',
         'keep_uploaded_files': 'false',
+        'show_plain_english_explanations': 'false',
     }
     try:
         now_str = datetime.now(timezone.utc).isoformat()

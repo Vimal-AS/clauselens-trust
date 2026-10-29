@@ -1252,6 +1252,7 @@ input:checked + .slider:before {
 .badge-verified { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
 .badge-needs_manual_review { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
 .badge-unable_to_verify { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+.badge-neutral { background: var(--bg-surface-secondary); color: var(--text-secondary); border: 1px solid var(--border-color); }
 
 .finding-title-text {
     font-size: 14px;
@@ -1486,6 +1487,10 @@ input:checked + .slider:before {
     grid-template-columns: 1fr 1fr;
     gap: 16px;
     margin-bottom: 16px;
+}
+
+.action-impact-grid.single-item {
+    grid-template-columns: 1fr;
 }
 
 .narrative-item {
@@ -1969,7 +1974,8 @@ input:checked + .slider:before {
     line-height: 1.4;
 }
 
-.demo-card-conflicts {
+.demo-card-conflicts,
+.demo-card-summary {
     display: inline-block;
     font-size: 11.5px;
     font-weight: 600;

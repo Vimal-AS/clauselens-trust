@@ -61,8 +61,15 @@
         </div>
         <div class="card-body">
             <div class="setting-item">
+                <label class="checkbox-label" for="showExplanationsToggle">
+                    <input type="checkbox" id="showExplanationsToggle">
+                    <strong class="setting-label-text">Show plain-English explanations</strong>
+                </label>
+                <p class="setting-hint">Adds a simple explanation to each finding. Off by default.</p>
+            </div>
+            <div class="setting-item mt-4" id="languageSettingGroup">
                 <label for="languageSelect" class="setting-label">Explanation Language</label>
-                <p class="setting-hint">Language for plain-language risk explanations.</p>
+                <p class="setting-hint" id="languageSettingHint">Language for plain-language risk explanations.</p>
                 <select id="languageSelect" class="form-control">
                     <option value="en" selected>English</option>
                     <option value="ta">Tamil (எளிய தமிழ் விளக்கங்கள்)</option>

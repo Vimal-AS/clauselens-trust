@@ -6,6 +6,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const themeRadios = document.querySelectorAll('input[name="themeSelection"]');
     const languageSelect = document.getElementById('languageSelect');
+    const showExplanationsToggle = document.getElementById('showExplanationsToggle');
     const keepFilesToggle = document.getElementById('keepUploadedFilesToggle');
     const defaultSeverityFilter = document.getElementById('defaultSeverityFilter');
     const defaultCategoryFilter = document.getElementById('defaultCategoryFilter');
@@ -33,6 +34,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const matchedRadio = document.querySelector(`input[name="themeSelection"][value="${themeVal}"]`);
                 if (matchedRadio) matchedRadio.checked = true;
 
+                // Show plain-English explanations
+                const showExp = s.show_plain_english_explanations === 'true';
+                if (showExplanationsToggle) {
+                    showExplanationsToggle.checked = showExp;
+                }
+
                 // Language
                 if (s.language && languageSelect) {
                     languageSelect.value = s.language;
@@ -57,6 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
     saveSettingsBtn.addEventListener('click', () => {
         const selectedTheme = document.querySelector('input[name="themeSelection"]:checked').value;
         const selectedLanguage = languageSelect.value;
+        const showExplanations = showExplanationsToggle && showExplanationsToggle.checked ? 'true' : 'false';
         const keepFiles = keepFilesToggle.checked ? 'true' : 'false';
         const defSev = defaultSeverityFilter.value;
         const defCat = defaultCategoryFilter.value;
@@ -64,6 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const updatedSettings = {
             theme: selectedTheme,
             language: selectedLanguage,
+            show_plain_english_explanations: showExplanations,
             keep_uploaded_files: keepFiles,
             default_severity_filter: defSev,
             default_category_filter: defCat
@@ -81,6 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
         })
         .then(() => {
             applyTheme(selectedTheme);
+            localStorage.setItem('show_plain_english_explanations', showExplanations);
             showToast('Settings saved successfully.', 'success');
         })
         .catch(err => {
@@ -98,6 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return data;
             })
             .then(() => {
+                localStorage.setItem('show_plain_english_explanations', 'false');
                 showToast('Default settings restored.', 'success');
                 loadSettings();
                 applyTheme('light');

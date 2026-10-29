@@ -276,9 +276,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const card = document.createElement('div');
             card.className = 'demo-choice-card';
 
-            const badgeClass = d.risk_badge.toLowerCase().includes('high') 
-                ? 'badge-high' 
-                : (d.risk_badge.toLowerCase().includes('medium') ? 'badge-medium' : 'badge-match');
+            const badgeText = d.badge || d.risk_badge || (d.file_type ? d.file_type.toUpperCase() : 'Sample');
 
             card.innerHTML = `
                 <div class="demo-card-left">
@@ -288,10 +286,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="demo-card-info">
                         <div class="demo-card-header">
                             <span class="demo-card-title">${escapeHtml(d.title)}</span>
-                            <span class="badge-pill ${badgeClass}">${escapeHtml(d.risk_badge)}</span>
+                            <span class="badge-pill badge-neutral">${escapeHtml(badgeText)}</span>
                         </div>
                         <p class="demo-card-desc">${escapeHtml(d.description)}</p>
-                        <span class="demo-card-conflicts">${escapeHtml(d.conflicts_summary)}</span>
+                        ${(d.summary || d.conflicts_summary) ? `<span class="demo-card-summary">${escapeHtml(d.summary || d.conflicts_summary)}</span>` : ''}
                     </div>
                 </div>
                 <div class="demo-card-actions">

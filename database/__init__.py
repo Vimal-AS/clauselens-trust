@@ -169,6 +169,7 @@ def seed_default_settings():
         'default_severity_filter': 'all',
         'default_category_filter': 'all',
         'keep_uploaded_files': 'false',
+        'show_plain_english_explanations': 'false',
     }
     for key, value in defaults.items():
         cursor.execute(

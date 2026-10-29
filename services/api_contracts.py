@@ -238,12 +238,14 @@ DEMO_CONTRACTS = [
     {
         'id': 'sample_freelance',
         'filename': 'sample_freelance_contract.pdf',
-        'display_name': 'Sample_Freelance_Agreement.pdf',
+        'display_name': 'Freelance_Service_Agreement.pdf',
         'title': 'Freelance Service Agreement',
         'file_type': 'pdf',
-        'risk_badge': 'High Risk',
-        'conflicts_summary': '4 Conflicts (Payment, Renewal, Liability, Jurisdiction)',
-        'description': 'Net 60 days, auto-renewal with 90-day cancellation notice, unlimited liability, Singapore courts.'
+        'badge': 'Freelance Contract',
+        'risk_badge': 'Freelance Contract',
+        'summary': 'Payment terms, service delivery, term duration, and jurisdiction.',
+        'conflicts_summary': 'Payment terms, service delivery, term duration, and jurisdiction.',
+        'description': 'Standard freelance contract for independent technical services.'
     },
     {
         'id': 'vendor_supply',
@@ -251,19 +253,23 @@ DEMO_CONTRACTS = [
         'display_name': 'Vendor_Supply_Agreement.docx',
         'title': 'Vendor Supply Agreement',
         'file_type': 'docx',
-        'risk_badge': 'High Risk',
-        'conflicts_summary': '3 Conflicts (Net 45, 24-Mo Renewal, Uncapped Liability)',
-        'description': 'Net 45 payment, 24-month renewal term, uncapped liability & broad indemnity, London courts.'
+        'badge': 'Supply Agreement',
+        'risk_badge': 'Supply Agreement',
+        'summary': 'Product deliveries, invoicing schedule, renewal, and liabilities.',
+        'conflicts_summary': 'Product deliveries, invoicing schedule, renewal, and liabilities.',
+        'description': 'Commercial vendor agreement for recurring goods and supplies delivery.'
     },
     {
         'id': 'nda_strict',
         'filename': 'nda_strict_confidentiality.pdf',
         'display_name': 'Strict_Mutual_NDA.pdf',
-        'title': 'Strict Mutual NDA',
+        'title': 'Mutual Non-Disclosure Agreement',
         'file_type': 'pdf',
-        'risk_badge': 'High Risk',
-        'conflicts_summary': '3 Conflicts (Net 60, Unlimited Indemnity, California Law)',
-        'description': '60-day invoice disbursement, unlimited broad indemnity, California USA governing jurisdiction.'
+        'badge': 'Mutual NDA',
+        'risk_badge': 'Mutual NDA',
+        'summary': 'Confidential information scope, exceptions, and dispute resolution.',
+        'conflicts_summary': 'Confidential information scope, exceptions, and dispute resolution.',
+        'description': 'Standard non-disclosure agreement for reciprocal business evaluations.'
     },
     {
         'id': 'software_saas',
@@ -271,29 +277,35 @@ DEMO_CONTRACTS = [
         'display_name': 'Software_Subscription_Agreement.docx',
         'title': 'SaaS Subscription Contract',
         'file_type': 'docx',
-        'risk_badge': 'Medium Risk',
-        'conflicts_summary': '3 Conflicts (Net 60, 15-Day Unilateral Termination, Singapore Law)',
-        'description': '60-day invoicing, 15-day unilateral termination right, Singapore governing law.'
+        'badge': 'Subscription Agreement',
+        'risk_badge': 'Subscription Agreement',
+        'summary': 'Subscription licenses, termination conditions, and payment terms.',
+        'conflicts_summary': 'Subscription licenses, termination conditions, and payment terms.',
+        'description': 'Software subscription agreement defining service levels and access terms.'
     },
     {
         'id': 'ambiguous_payment',
         'filename': 'ambiguous_payment_contract.pdf',
-        'display_name': 'Standard_Consulting_Agreement.pdf',
+        'display_name': 'Technical_Advisory_Agreement.pdf',
         'title': 'Technical Advisory Agreement',
         'file_type': 'pdf',
-        'risk_badge': 'Ambiguous Terms',
-        'conflicts_summary': '1 Uncertain (Within a reasonable time), 0 Conflicts',
-        'description': 'Payment timing "within a reasonable time", capped liability, Indian jurisdiction (Chennai).'
+        'badge': 'Advisory Agreement',
+        'risk_badge': 'Advisory Agreement',
+        'summary': 'Advisory scope, compensation, liability terms, and governing law.',
+        'conflicts_summary': 'Advisory scope, compensation, liability terms, and governing law.',
+        'description': 'Consulting advisory agreement outlining scope of advisory services.'
     },
     {
         'id': 'clean_compliant',
         'filename': 'clean_compliant_contract.pdf',
-        'display_name': 'Master_Services_Agreement_Compliant.pdf',
-        'title': 'Clean Master Services Agreement',
+        'display_name': 'Master_Services_Agreement.pdf',
+        'title': 'Master Services Agreement',
         'file_type': 'pdf',
-        'risk_badge': 'Compliant',
-        'conflicts_summary': '0 Conflicts (5 Matches, Net 15, Liability Cap)',
-        'description': 'Net 15 days, no auto-renewal, clear liability cap, Indian jurisdiction (Mumbai).'
+        'badge': 'Master Agreement',
+        'risk_badge': 'Master Agreement',
+        'summary': 'Standard framework terms, task orders, and legal responsibilities.',
+        'conflicts_summary': 'Standard framework terms, task orders, and legal responsibilities.',
+        'description': 'Framework agreement governing professional services and task orders.'
     },
     {
         'id': 'consulting_milestones',
@@ -301,9 +313,11 @@ DEMO_CONTRACTS = [
         'display_name': 'Professional_Services_Contract.docx',
         'title': 'Consulting Milestone Agreement',
         'file_type': 'docx',
-        'risk_badge': 'Compliant',
-        'conflicts_summary': '0 Conflicts (Milestone advance payment, table format)',
-        'description': 'Advance payment schedule, milestone tables, 60-day mutual termination, Chennai courts.'
+        'badge': 'Professional Services',
+        'risk_badge': 'Professional Services',
+        'summary': 'Phased project milestones, acceptance criteria, and mutual termination.',
+        'conflicts_summary': 'Phased project milestones, acceptance criteria, and mutual termination.',
+        'description': 'Project services contract with structured milestone deliverables.'
     }
 ]
 

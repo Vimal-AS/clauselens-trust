@@ -8,6 +8,24 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentAnalysisData = null;
     let allFindings = [];
     let filteredFindings = [];
+    let showPlainEnglish = localStorage.getItem('show_plain_english_explanations') === 'true';
+
+    // Sync setting with backend
+    fetch('/api/settings')
+        .then(res => res.json())
+        .then(data => {
+            if (data && data.settings) {
+                const val = data.settings.show_plain_english_explanations === 'true';
+                if (val !== showPlainEnglish) {
+                    showPlainEnglish = val;
+                    localStorage.setItem('show_plain_english_explanations', val ? 'true' : 'false');
+                    if (allFindings.length > 0) {
+                        applyFilters();
+                    }
+                }
+            }
+        })
+        .catch(() => {});
 
     // Filter elements
     const filterSeverity = document.getElementById('filterSeverity');
@@ -364,11 +382,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                     `}
 
-                    <div class="action-impact-grid">
-                        <div class="narrative-item">
-                            <strong>Plain-English Explanation:</strong>
-                            <p>${escapeHtml(f.explanation || '')}</p>
-                        </div>
+                    <div class="action-impact-grid ${!showPlainEnglish ? 'single-item' : ''}">
+                        ${showPlainEnglish ? `
+                            <div class="narrative-item">
+                                <strong>Plain-English Explanation:</strong>
+                                <p>${escapeHtml(f.explanation || '')}</p>
+                            </div>
+                        ` : ''}
                         <div class="narrative-item">
                             <strong>Potential Risk Impact:</strong>
                             <p>${escapeHtml(f.potential_impact || '')}</p>
